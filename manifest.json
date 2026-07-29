@@ -8,13 +8,16 @@
 "display": "standalone",
 "display_override": [
 "standalone",
-"fullscreen"
+"tabbed",
+"window-controls-overlay",
+"minimal-ui"
 ],
 "orientation": "portrait-primary",
 "background_color": "#0f172a",
 "theme_color": "#4f46e5",
 "lang": "id-ID",
 "dir": "ltr",
+"iarc_rating_id": "e84b0754-2b23-444a-a9d8-5b487d605001",
 "categories": [
 "education",
 "productivity",
@@ -29,6 +32,48 @@
 "url": "url"
 }
 },
+"file_handlers": [
+{
+"action": "/my-gas-app/",
+"accept": {
+"text/csv": [".csv"]
+}
+}
+],
+"widgets": [
+{
+"name": "Absensi Quick Scan",
+"short_name": "Absensi",
+"description": "Widget untuk membuka kamera absensi dengan cepat",
+"tag": "absensi-widget",
+"template": "widget-template",
+"ms_ac_template": "widgets/absensi.json",
+"data": "widgets/data.json",
+"type": "application/json",
+"screenshots": [
+{
+"src": "https://placehold.co/400x200/4f46e5/ffffff.png?text=Widget+Absensi",
+"sizes": "400x200",
+"label": "Widget Absensi"
+}
+]
+}
+],
+"edge_side_panel": {
+"preferred_width": 400
+},
+"scope_extensions": [
+{
+"origin": "https://surdi152-maker.github.io"
+}
+],
+"related_applications": [
+{
+"platform": "play",
+"url": "https://play.google.com/store/apps/details?id=io.github.surdi152_maker.twa",
+"id": "io.github.surdi152_maker.twa"
+}
+],
 "prefer_related_applications": false,
 "icons": [
 {
@@ -54,6 +99,22 @@
 "sizes": "512x512",
 "type": "image/png",
 "purpose": "maskable"
+}
+],
+"screenshots": [
+{
+"src": "https://placehold.co/1080x1920/4f46e5/ffffff.png?text=Absensi+Guru+Mobile",
+"sizes": "1080x1920",
+"type": "image/png",
+"form_factor": "narrow",
+"label": "Tampilan Mobile Absensi Wajah"
+},
+{
+"src": "https://placehold.co/1920x1080/4f46e5/ffffff.png?text=Absensi+Guru+Desktop",
+"sizes": "1920x1080",
+"type": "image/png",
+"form_factor": "wide",
+"label": "Tampilan Desktop Laporan & Rekap Gaji"
 }
 ],
 "shortcuts": [
