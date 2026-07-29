@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Absensi Guru - Face Recognition</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0f172a">
+  <link rel="icon" href="icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Absensi Guru">
+  <meta name="mobile-web-app-capable" content="yes">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <!-- FontAwesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <!-- face-api.js (deteksi & pengenalan wajah di browser) -->
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <!-- jsPDF + AutoTable (export laporan PDF) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <!-- SheetJS (export laporan Excel) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .custom-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    .card-glow:hover {
+      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+      transform: translateY(-2px);
+      transition: all 0.3s ease;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1e293b; }
+    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+    @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
+    .scan-line {
+      position: absolute; left: 0; width: 100%; height: 4px;
+      background: #10b981; box-shadow: 0 0 12px 3px #10b981;
+      animation: scan 2.2s linear infinite; z-index: 20;
+    }
+    .tab-content.hidden { display: none; }
+    .nav-btn.active { background-color: #0f172a; }
+    #face-box {
+      position: absolute; border: 3px solid #10b981; border-radius: 8px;
+      box-shadow: 0 0 15px rgba(16,185,129,0.6); display: none; pointer-events: none;
+    }
+    .spinner {
+      border: 3px solid rgba(255,255,255,0.15); border-top: 3px solid #10b981;
+      border-radius: 50%; width: 22px; height: 22px; animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col custom-gradient">
+
+  <!-- NAVIGATION HEADER -->
+  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 text-white flex items-center justify-center">
+          <i class="fa-solid fa-user-shield text-xl md:text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            ABSENSI GURU
+            <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono">FACE ID</span>
+          </h1>
+          <p id="instansi-subtitle" class="text-xs text-slate-400">Memuat data instansi...</p>
+        </div>
+      </div>
+
+      <nav id="main-nav" class="flex flex-wrap gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80 w-full md:w-auto">
+        <button onclick="switchTab('absensi', this)" class="nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition flex items-center justify-center gap-2 active" style="box-shadow: inset 0 -2px 0 0 #10b981;">
+          <i class="fa-solid fa-camera text-emerald-400"></i> Absensi
+        </button>
+        <button data-nav="admin" onclick="switchTab('datamaster', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-database text-blue-400"></i> Data Guru
+        </button>
+        <button data-nav="admin" onclick="switchTab('gaji', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-sack-dollar text-amber-400"></i> Perhitungan Gaji
+        </button>
+        <button data-nav="admin" onclick="switchTab('laporan', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-file-lines text-purple-400"></i> Laporan
+        </button>
+        <button data-nav="admin" onclick="switchTab('pengaturan', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-sliders text-slate-400"></i> Pengaturan
+        </button>
+        <button data-nav="guru" onclick="switchTab('laporansaya', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-file-lines text-purple-400"></i> Laporan Saya
+        </button>
+        <button data-nav="guru" onclick="switchTab('gajisaya', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
+          <i class="fa-solid fa-sack-dollar text-amber-400"></i> Slip Gaji Saya
+        </button>
+      </nav>
+
+      <div id="auth-area" class="flex items-center gap-2">
+        <button id="btn-install-app" onclick="installApp()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl transition items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-download"></i> Install App
+        </button>
+        <button id="btn-open-login" onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap">
+          <i class="fa-solid fa-right-to-bracket"></i> Login Admin / Guru
+        </button>
+        <div id="user-badge" class="hidden items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
+          <div class="p-1.5 bg-indigo-500/10 text-indigo-400 rounded-lg text-xs"><i class="fa-solid fa-user"></i></div>
+          <div class="leading-tight">
+            <p id="user-badge-nama" class="text-xs font-bold text-white">-</p>
+            <p id="user-badge-role" class="text-[10px] text-slate-400">-</p>
+          </div>
+          <button onclick="openChangePasswordModal()" title="Ganti Password" class="text-slate-400 hover:text-white text-xs px-1.5"><i class="fa-solid fa-key"></i></button>
+          <button onclick="doLogout()" title="Logout" class="text-rose-400 hover:text-rose-300 text-xs px-1.5"><i class="fa-solid fa-power-off"></i></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6">
+
+    <!-- DASHBOARD STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl"><i class="fa-solid fa-user-tie text-lg md:text-xl"></i></div>
+        <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Guru</p>
+        <p id="stat-total-guru" class="text-lg md:text-2xl font-black text-white">0</p></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl"><i class="fa-solid fa-user-check text-lg md:text-xl"></i></div>
+        <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Hadir Hari Ini</p>
+        <p id="stat-hadir-hari-ini" class="text-lg md:text-2xl font-black text-white">0</p></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl"><i class="fa-solid fa-clock text-lg md:text-xl"></i></div>
+        <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Terlambat Hari Ini</p>
+        <p id="stat-terlambat-hari-ini" class="text-lg md:text-2xl font-black text-white">0</p></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl"><i class="fa-solid fa-id-badge text-lg md:text-xl"></i></div>
+        <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Belum Absen</p>
+        <p id="stat-belum-absen" class="text-lg md:text-2xl font-black text-white">0</p></div>
+      </div>
+    </div>
+
+    <!-- ================== TAB 1: ABSENSI WAJAH ================== -->
+    <section id="tab-absensi" class="tab-content block">
+
+      <!-- STATE: BELUM LOGIN -->
+      <div id="absensi-locked" class="max-w-md mx-auto bg-slate-900/40 border border-slate-800 rounded-3xl p-8 text-center">
+        <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto mb-4">
+          <i class="fa-solid fa-lock text-2xl"></i>
+        </div>
+        <h2 class="text-base font-bold text-white mb-1">Login Dulu untuk Absen</h2>
+        <p class="text-xs text-slate-400 mb-5">Setiap guru/staff wajib login dengan akun masing-masing sebelum melakukan absensi wajah. Ini memastikan wajah yang dicocokkan benar-benar milik akun yang login.</p>
+        <button onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-6 py-3 rounded-xl transition inline-flex items-center gap-2">
+          <i class="fa-solid fa-right-to-bracket"></i> Login Sekarang
+        </button>
+      </div>
+
+      <!-- STATE: SUDAH LOGIN -->
+      <div id="absensi-unlocked" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT: CAMERA -->
+        <div class="lg:col-span-7 bg-slate-900/40 border border-slate-800 p-4 rounded-3xl flex flex-col">
+          <div class="mb-3 flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-face-viewfinder mr-2 text-emerald-400"></i>Scan Wajah Kehadiran</h2>
+              <p class="text-xs text-slate-400">Login sebagai <span id="absensi-user-nama" class="text-slate-200 font-semibold">-</span> • Posisikan wajah Anda di depan kamera.</p>
+            </div>
+          </div>
+
+          <div id="model-loading-box" class="flex items-center gap-3 p-3 mb-3 bg-blue-950/30 border border-blue-900/50 rounded-2xl">
+            <div class="spinner"></div>
+            <p class="text-xs text-blue-300">Memuat model pengenalan wajah, mohon tunggu...</p>
+          </div>
+
+          <div id="face-not-registered-box" class="hidden items-center gap-3 p-3 mb-3 bg-amber-950/30 border border-amber-900/50 rounded-2xl">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+            <p class="text-xs text-amber-300">Wajah Anda belum didaftarkan oleh Admin. Hubungi Admin di menu Data Guru untuk mendaftarkan wajah Anda.</p>
+          </div>
+
+          <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 flex items-center justify-center">
+            <video id="video-feed" autoplay muted playsinline class="w-full h-full object-cover"></video>
+            <div id="face-box"></div>
+            <div class="scan-line" id="scan-line-el"></div>
+            <div id="camera-off-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-950/80 gap-2">
+              <i class="fa-solid fa-camera-slash text-3xl text-slate-600"></i>
+              <p class="text-xs text-slate-500">Kamera belum aktif</p>
+              <button onclick="startAttendanceCamera()" class="mt-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                <i class="fa-solid fa-power-off mr-1"></i> Aktifkan Kamera
+              </button>
+            </div>
+          </div>
+
+          <div id="scan-status-box" class="mt-4 p-4 rounded-2xl border text-center bg-slate-950 border-slate-800">
+            <p id="scan-status-text" class="text-sm font-semibold text-slate-400">Menunggu deteksi wajah...</p>
+          </div>
+
+          <div class="flex gap-2 mt-3">
+            <button onclick="stopAttendanceCamera()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2.5 rounded-xl transition">
+              <i class="fa-solid fa-stop mr-1"></i> Matikan Kamera
+            </button>
+            <button onclick="doLogout()" class="flex-1 bg-slate-800 hover:bg-rose-900/60 text-white text-xs font-bold py-2.5 rounded-xl transition">
+              <i class="fa-solid fa-right-from-bracket mr-1"></i> Logout (Ganti Pengguna)
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: LOG -->
+        <div class="lg:col-span-5 bg-slate-900/40 border border-slate-800 p-4 rounded-3xl flex flex-col">
+          <h2 class="text-base md:text-lg font-bold text-white mb-3"><i class="fa-solid fa-list-check mr-2 text-blue-400"></i>Aktivitas Absensi Hari Ini</h2>
+          <div id="log-list-container" class="flex-1 max-h-[520px] overflow-y-auto flex flex-col gap-3 pr-1">
+            <div id="log-empty-state" class="m-auto text-center py-8">
+              <i class="fa-solid fa-receipt text-3xl text-slate-700 mb-2"></i>
+              <p class="text-xs text-slate-500">Belum ada aktivitas presensi saat ini</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 2: DATA GURU ================== -->
+    <section id="tab-datamaster" class="tab-content hidden">
+      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
+          <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-user-tie mr-2 text-indigo-400"></i>Data Guru / Pegawai</h2>
+          <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Tambah Guru
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-300 uppercase font-mono tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="px-4 py-3">NIP</th>
+                <th class="px-4 py-3">Nama Lengkap</th>
+                <th class="px-4 py-3">Jabatan</th>
+                <th class="px-4 py-3">Mapel</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3 text-right">Gaji Pokok</th>
+                <th class="px-4 py-3 text-right">Tunjangan</th>
+                <th class="px-4 py-3 text-center">Wajah</th>
+                <th class="px-4 py-3 text-center">Tindakan</th>
+              </tr>
+            </thead>
+            <tbody id="guru-table-body" class="divide-y divide-slate-800/80"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 3: PERHITUNGAN GAJI ================== -->
+    <section id="tab-gaji" class="tab-content hidden">
+      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
+          <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-sack-dollar mr-2 text-amber-400"></i>Perhitungan Gaji & Potongan Keterlambatan</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="month" id="input-periode-gaji" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <button onclick="hitungGaji()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+              <i class="fa-solid fa-calculator mr-1"></i> Hitung Gaji
+            </button>
+            <button onclick="exportPayrollExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+            <button onclick="exportPayrollPDF()" class="bg-rose-700 hover:bg-rose-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+          </div>
+        </div>
+        <p class="text-xs text-slate-400 mb-4">
+          Rumus: <span class="text-slate-200 font-mono">Gaji Bersih = Gaji Pokok + Tunjangan − (Total Menit Terlambat × Tarif Potongan/menit)</span>.
+          Keterlambatan dihitung di luar masa toleransi yang diatur pada tab Pengaturan.
+        </p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-300 uppercase font-mono tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="px-3 py-3">NIP</th>
+                <th class="px-3 py-3">Nama</th>
+                <th class="px-3 py-3">Jabatan</th>
+                <th class="px-3 py-3 text-center">Hadir</th>
+                <th class="px-3 py-3 text-center">Terlambat</th>
+                <th class="px-3 py-3 text-center">Menit Terlambat</th>
+                <th class="px-3 py-3 text-right">Gaji Pokok</th>
+                <th class="px-3 py-3 text-right">Tunjangan</th>
+                <th class="px-3 py-3 text-right text-rose-400">Potongan</th>
+                <th class="px-3 py-3 text-right text-emerald-400">Gaji Bersih</th>
+              </tr>
+            </thead>
+            <tbody id="gaji-table-body" class="divide-y divide-slate-800/80">
+              <tr><td colspan="10" class="text-center py-8 text-slate-500">Pilih periode lalu klik "Hitung Gaji"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 4: LAPORAN ================== -->
+    <section id="tab-laporan" class="tab-content hidden">
+      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
+          <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-file-lines mr-2 text-purple-400"></i>Laporan Absensi Guru</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="date" id="input-tanggal-mulai" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <span class="text-xs text-slate-400">s/d</span>
+            <input type="date" id="input-tanggal-akhir" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <button onclick="loadLaporan()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
+            <button onclick="exportLaporanExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
+            <button onclick="exportLaporanPDF()" class="bg-rose-700 hover:bg-rose-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-300 uppercase font-mono tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="px-3 py-3">Waktu</th>
+                <th class="px-3 py-3">NIP</th>
+                <th class="px-3 py-3">Nama</th>
+                <th class="px-3 py-3">Jabatan</th>
+                <th class="px-3 py-3">Status</th>
+                <th class="px-3 py-3 text-center">Menit Terlambat</th>
+              </tr>
+            </thead>
+            <tbody id="laporan-table-body" class="divide-y divide-slate-800/80">
+              <tr><td colspan="6" class="text-center py-8 text-slate-500">Pilih rentang tanggal lalu klik "Tampilkan"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 5: PENGATURAN ================== -->
+    <section id="tab-pengaturan" class="tab-content hidden">
+      <div class="max-w-xl bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <h2 class="text-base md:text-lg font-bold text-white mb-1"><i class="fa-solid fa-sliders mr-2 text-slate-400"></i>Pengaturan Sistem</h2>
+        <p class="text-xs text-slate-400 mb-6">Perubahan akan memengaruhi status kehadiran & perhitungan gaji berikutnya.</p>
+
+        <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Nama Sekolah / Instansi</label>
+            <input id="set-instansi" type="text" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Jam Masuk Kerja (HH:mm)</label>
+            <input id="set-jam-masuk" type="time" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Toleransi Keterlambatan (menit)</label>
+            <input id="set-toleransi" type="number" min="0" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Tarif Potongan per Menit Terlambat (Rp)</label>
+            <input id="set-tarif" type="number" min="0" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
+          </div>
+          <button onclick="saveSettingsForm()" class="mt-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Pengaturan
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 6: LAPORAN SAYA (GURU) ================== -->
+    <section id="tab-laporansaya" class="tab-content hidden">
+      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
+          <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-file-lines mr-2 text-purple-400"></i>Riwayat Absensi Saya</h2>
+          <div class="flex flex-wrap items-center gap-2">
+            <input type="date" id="my-tanggal-mulai" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <span class="text-xs text-slate-400">s/d</span>
+            <input type="date" id="my-tanggal-akhir" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <button onclick="loadMyReport()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
+          </div>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-950 text-slate-300 uppercase font-mono tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="px-3 py-3">Waktu</th>
+                <th class="px-3 py-3">Status</th>
+                <th class="px-3 py-3 text-center">Menit Terlambat</th>
+              </tr>
+            </thead>
+            <tbody id="laporansaya-table-body" class="divide-y divide-slate-800/80">
+              <tr><td colspan="3" class="text-center py-8 text-slate-500">Pilih rentang tanggal lalu klik "Tampilkan"</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================== TAB 7: SLIP GAJI SAYA (GURU) ================== -->
+    <section id="tab-gajisaya" class="tab-content hidden">
+      <div class="max-w-xl bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
+          <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-sack-dollar mr-2 text-amber-400"></i>Slip Gaji Saya</h2>
+          <div class="flex items-center gap-2">
+            <input type="month" id="my-periode-gaji" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
+            <button onclick="loadMyPayrollSlip()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Lihat</button>
+          </div>
+        </div>
+        <div id="gajisaya-content" class="text-sm text-slate-400 text-center py-8">Pilih bulan lalu klik "Lihat".</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================== MODAL LOGIN ================== -->
+  <div id="login-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6">
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-right-to-bracket mr-2 text-blue-400"></i>Login</h3>
+        <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Username</label>
+          <input id="login-username" type="text" autocomplete="username" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none" onkeydown="if(event.key==='Enter') doLogin();">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Password</label>
+          <input id="login-password" type="password" autocomplete="current-password" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none" onkeydown="if(event.key==='Enter') doLogin();">
+        </div>
+        <p id="login-error" class="hidden text-xs text-rose-400 bg-rose-950/30 border border-rose-900/50 rounded-xl p-2.5"></p>
+        <button onclick="doLogin()" class="mt-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+          <i class="fa-solid fa-right-to-bracket mr-1"></i> Masuk
+        </button>
+        <p class="text-[10px] text-slate-500 text-center mt-1">Akun dibuat oleh Admin. Guru/Staff baru bisa login setelah diberi username &amp; password oleh Admin di menu Data Guru.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== MODAL GANTI PASSWORD ================== -->
+  <div id="password-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6">
+      <div class="flex justify-between items-center mb-5">
+        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-key mr-2 text-amber-400"></i>Ganti Password</h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Password Lama</label>
+          <input id="cp-old" type="password" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Password Baru (min. 6 karakter)</label>
+          <input id="cp-new" type="password" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <button onclick="doChangePassword()" class="mt-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+          <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Password Baru
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================== MODAL TAMBAH/EDIT GURU ================== -->
+  <div id="guru-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <div class="flex justify-between items-center mb-5">
+        <h3 id="modal-title" class="text-lg font-bold text-white">Tambah Guru</h3>
+        <button onclick="closeGuruModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">NIP / ID</label>
+          <input id="form-nip" type="text" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Nama Lengkap</label>
+          <input id="form-nama" type="text" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Jabatan</label>
+          <input id="form-jabatan" type="text" placeholder="Guru / Staff TU / dll" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Mata Pelajaran (opsional)</label>
+          <input id="form-mapel" type="text" list="mapel-list" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+          <datalist id="mapel-list"></datalist>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Status Kerja</label>
+          <select id="form-status" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+            <option>PNS</option>
+            <option>PPPK</option>
+            <option>Honorer</option>
+            <option>Kontrak</option>
+          </select>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Gaji Pokok (Rp)</label>
+          <input id="form-gaji-pokok" type="number" min="0" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-semibold text-slate-400">Tunjangan (Rp)</label>
+          <input id="form-tunjangan" type="number" min="0" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+        </div>
+      </div>
+
+      <!-- AKUN LOGIN GURU -->
+      <div class="mt-5 p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+        <p class="text-xs font-bold text-slate-300 mb-1"><i class="fa-solid fa-user-lock mr-1 text-blue-400"></i>Akun Login (opsional)</p>
+        <p class="text-[10px] text-slate-500 mb-3">Isi supaya guru ini bisa login sendiri untuk melihat riwayat absensi & slip gajinya. Kosongkan jika tidak perlu.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Username</label>
+            <input id="form-username" type="text" autocomplete="off" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Password <span id="form-password-hint" class="text-slate-600 font-normal"></span></label>
+            <input id="form-password" type="password" autocomplete="new-password" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+          </div>
+        </div>
+      </div>
+
+      <!-- FACE ENROLLMENT -->
+      <div class="mt-5 p-4 bg-slate-950 border border-slate-800 rounded-2xl">
+        <div class="flex justify-between items-center mb-3">
+          <p class="text-xs font-bold text-slate-300"><i class="fa-solid fa-face-smile mr-1 text-emerald-400"></i>Pendaftaran Wajah</p>
+          <span id="face-status-badge" class="text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 font-bold">BELUM TERDAFTAR</span>
+        </div>
+        <div class="relative w-full max-w-xs mx-auto aspect-video bg-black rounded-xl overflow-hidden border border-slate-800">
+          <video id="enroll-video" autoplay muted playsinline class="w-full h-full object-cover"></video>
+          <div id="enroll-camera-off" class="absolute inset-0 flex items-center justify-center bg-slate-950/80">
+            <i class="fa-solid fa-camera text-2xl text-slate-600"></i>
+          </div>
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button onclick="startEnrollCamera()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold py-2 rounded-xl transition">
+            <i class="fa-solid fa-video mr-1"></i> Aktifkan Kamera
+          </button>
+          <button onclick="captureEnrollFace()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 rounded-xl transition">
+            <i class="fa-solid fa-camera mr-1"></i> Ambil Wajah
+          </button>
+        </div>
+      </div>
+
+      <div class="flex gap-3 mt-6">
+        <button onclick="closeGuruModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold py-3 rounded-xl transition">Batal</button>
+        <button onclick="saveGuru()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">Simpan Data</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ===================== STATE GLOBAL =====================
+  var APP = {
+    teachers: [],
+    mapel: [],
+    instansi: '', jamMasuk: '07:00', toleransi: 15, tarifPotongan: 0,
+    faceDescriptors: [],      // [{nip, nama, descriptor:[128 float]}] (tidak dipakai lagi, disisakan untuk kompatibilitas)
+    myFaceDescriptor: null,   // {nip, nama, descriptor:[128 float]} milik akun yang sedang login
+    modelsLoaded: false,
+    attendanceStream: null,
+    enrollStream: null,
+    scanTimer: null,
+    isProcessingScan: false,
+    editingNip: null,
+    currentEnrollDescriptor: null,
+    todayLog: [],
+    payrollCache: null,
+    laporanCache: null,
+    myReportCache: null,
+    MATCH_THRESHOLD: 0.5,
+    session: { token: null, role: null, nip: null, nama: null } // diisi dari localStorage saat load
+  };
+
+  const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@master/weights';
+
+  // ===================== KONFIGURASI API =====================
+  // WAJIB DIISI: URL hasil Deploy > New deployment > Web app di Apps Script,
+  // formatnya https://script.google.com/macros/s/XXXXXXXXXXXX/exec
+  // Halaman ini TETAP BISA dibuka langsung dari Apps Script (google.script.run
+  // tidak dipakai lagi), tapi supaya kamera bisa diakses, file HTML ini
+  // sebaiknya di-hosting terpisah (GitHub Pages / Netlify / hosting sekolah),
+  // BUKAN dibuka lewat URL .../exec milik Apps Script.
+  var WEB_APP_URL = 'PASTE_URL_WEB_APP_ANDA_DI_SINI';
+
+  function callApi(action, params) {
+    if (!WEB_APP_URL || WEB_APP_URL.indexOf('PASTE_URL') === 0) {
+      return Promise.resolve({ success: false, message: 'WEB_APP_URL belum diisi di Index.html. Lihat petunjuk di komentar kode.' });
+    }
+    params = params || {};
+    if (APP.session.token && !params.token) params.token = APP.session.token;
+    var sep = WEB_APP_URL.indexOf('?') === -1 ? '?' : '&';
+    var url = WEB_APP_URL + sep + 'action=' + encodeURIComponent(action) + '&params=' + encodeURIComponent(JSON.stringify(params));
+    return fetch(url, { method: 'GET' }).then(function (res) {
+      if (!res.ok) {
+        throw new Error(
+          'HTTP ' + res.status + ' dari server saat memanggil aksi "' + action + '".\n' +
+          'URL dasar yang dipanggil: ' + WEB_APP_URL + '\n' +
+          'Periksa: (1) URL ini harus URL hasil Deploy > Manage deployments yang diakhiri "/exec" (BUKAN "/dev"), ' +
+          '(2) deployment harus versi terbaru (buat "New version" setiap kali Code.gs diubah), ' +
+          '(3) "Who has access" pada deployment harus "Anyone".'
+        );
+      }
+      return res.text().then(function (text) {
+        var parsed;
+        try {
+          parsed = JSON.parse(text);
+        } catch (e) {
+          throw new Error(
+            'Server tidak mengirim JSON yang valid untuk aksi "' + action + '" (kemungkinan URL salah atau akses deployment belum "Anyone").\n' +
+            'Cuplikan respons: ' + text.slice(0, 200)
+          );
+        }
+        if (parsed && parsed.authError) {
+          clearSession();
+          openLoginModal();
+          document.getElementById('login-error').classList.remove('hidden');
+          document.getElementById('login-error').innerText = parsed.message || 'Sesi berakhir, silakan login kembali.';
+        }
+        return parsed;
+      });
+    });
+  }
+
+  // ===================== SESI LOGIN =====================
+  function loadSessionFromStorage() {
+    try {
+      var raw = localStorage.getItem('absensiSession');
+      if (raw) APP.session = JSON.parse(raw);
+    } catch (e) { APP.session = { token: null, role: null, nip: null, nama: null }; }
+  }
+  function saveSessionToStorage() {
+    localStorage.setItem('absensiSession', JSON.stringify(APP.session));
+  }
+  function clearSession() {
+    APP.session = { token: null, role: null, nip: null, nama: null };
+    localStorage.removeItem('absensiSession');
+    applyRoleVisibility();
+  }
+
+  function applyRoleVisibility() {
+    var loggedIn = !!APP.session.token;
+    document.getElementById('btn-open-login').classList.toggle('hidden', loggedIn);
+    var badge = document.getElementById('user-badge');
+    badge.classList.toggle('hidden', !loggedIn);
+    badge.classList.toggle('flex', loggedIn);
+    if (loggedIn) {
+      document.getElementById('user-badge-nama').innerText = APP.session.nama || APP.session.username || '-';
+      document.getElementById('user-badge-role').innerText = APP.session.role === 'Admin' ? 'Administrator' : 'Guru / Staff';
+    }
+    document.querySelectorAll('[data-nav="admin"]').forEach(function (el) {
+      var show = loggedIn && APP.session.role === 'Admin';
+      el.classList.toggle('hidden', !show);
+      el.classList.toggle('flex', show);
+    });
+    document.querySelectorAll('[data-nav="guru"]').forEach(function (el) {
+      var show = loggedIn && APP.session.role === 'Guru';
+      el.classList.toggle('hidden', !show);
+      el.classList.toggle('flex', show);
+    });
+
+    // Tab Absensi: terkunci sampai login, lalu tampilkan kamera + nama pengguna
+    var locked = document.getElementById('absensi-locked');
+    var unlocked = document.getElementById('absensi-unlocked');
+    if (loggedIn) {
+      locked.classList.add('hidden');
+      unlocked.classList.remove('hidden');
+      unlocked.classList.add('grid');
+      document.getElementById('absensi-user-nama').innerText = APP.session.nama || APP.session.username || '-';
+      loadMyFaceDescriptor();
+    } else {
+      locked.classList.remove('hidden');
+      unlocked.classList.add('hidden');
+      unlocked.classList.remove('grid');
+      stopAttendanceCamera();
+      APP.myFaceDescriptor = null;
+    }
+
+    // Kalau tab yang sedang aktif ternyata tidak boleh diakses peran saat ini, kembali ke Absensi
+    var activeAdmin = ['datamaster', 'gaji', 'laporan', 'pengaturan'];
+    var activeGuru = ['laporansaya', 'gajisaya'];
+    var currentTab = document.querySelector('.tab-content:not(.hidden)');
+    if (currentTab) {
+      var id = currentTab.id.replace('tab-', '');
+      if (activeAdmin.indexOf(id) !== -1 && !(loggedIn && APP.session.role === 'Admin')) switchTab('absensi', document.querySelector('.nav-btn'));
+      if (activeGuru.indexOf(id) !== -1 && !(loggedIn && APP.session.role === 'Guru')) switchTab('absensi', document.querySelector('.nav-btn'));
+    }
+  }
+
+  function openLoginModal() {
+    document.getElementById('login-username').value = '';
+    document.getElementById('login-password').value = '';
+    document.getElementById('login-error').classList.add('hidden');
+    document.getElementById('login-modal').classList.remove('hidden');
+  }
+  function closeLoginModal() { document.getElementById('login-modal').classList.add('hidden'); }
+
+  function doLogin() {
+    var username = document.getElementById('login-username').value.trim();
+    var password = document.getElementById('login-password').value;
+    var errBox = document.getElementById('login-error');
+    errBox.classList.add('hidden');
+    if (!username || !password) {
+      errBox.innerText = 'Username dan password wajib diisi.';
+      errBox.classList.remove('hidden');
+      return;
+    }
+    callApi('login', { username: username, password: password }).then(function (res) {
+      if (!res || !res.success) {
+        errBox.innerText = (res && res.message) || 'Login gagal.';
+        errBox.classList.remove('hidden');
+        return;
+      }
+      APP.session = { token: res.token, role: res.role, nip: res.nip, nama: res.nama, username: username };
+      saveSessionToStorage();
+      closeLoginModal();
+      applyRoleVisibility();
+      if (res.role === 'Admin') {
+        switchTab('datamaster', document.querySelector('[data-nav="admin"]'));
+        loadInitialData();
+      } else {
+        switchTab('absensi', document.querySelector('.nav-btn'));
+      }
+      Swal.fire({ icon: 'success', title: 'Login Berhasil', text: 'Selamat datang, ' + res.nama + '!', timer: 1500, showConfirmButton: false });
+    }).catch(function (err) {
+      errBox.innerText = err.message || String(err);
+      errBox.classList.remove('hidden');
+    });
+  }
+
+  function doLogout(silent) {
+    if (silent) {
+      var token = APP.session.token;
+      clearSession();
+      switchTab('absensi', document.querySelector('.nav-btn'));
+      callApi('logout', { token: token }).catch(function () {});
+      return;
+    }
+    Swal.fire({
+      title: 'Logout?', icon: 'question', showCancelButton: true,
+      confirmButtonText: 'Ya, Logout', cancelButtonText: 'Batal', confirmButtonColor: '#dc2626'
+    }).then(function (result) {
+      if (!result.isConfirmed) return;
+      var token = APP.session.token;
+      clearSession();
+      switchTab('absensi', document.querySelector('.nav-btn'));
+      callApi('logout', { token: token }).catch(function () {});
+      Swal.fire({ icon: 'success', title: 'Berhasil Logout', timer: 1200, showConfirmButton: false });
+    });
+  }
+
+  function openChangePasswordModal() {
+    document.getElementById('cp-old').value = '';
+    document.getElementById('cp-new').value = '';
+    document.getElementById('password-modal').classList.remove('hidden');
+  }
+  function closeChangePasswordModal() { document.getElementById('password-modal').classList.add('hidden'); }
+
+  function doChangePassword() {
+    var oldPassword = document.getElementById('cp-old').value;
+    var newPassword = document.getElementById('cp-new').value;
+    if (!oldPassword || !newPassword) {
+      Swal.fire('Data Belum Lengkap', 'Isi password lama dan password baru.', 'warning'); return;
+    }
+    callApi('changePassword', { oldPassword: oldPassword, newPassword: newPassword }).then(function (res) {
+      if (res && res.success) {
+        Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
+        closeChangePasswordModal();
+      } else {
+        Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
+      }
+    }).catch(onServerError);
+  }
+
+  // ===================== INIT =====================
+  window.onload = function () {
+    registerServiceWorker();
+    var now = new Date();
+    document.getElementById('input-periode-gaji').value = now.toISOString().slice(0,7);
+    document.getElementById('my-periode-gaji').value = now.toISOString().slice(0,7);
+    var d = now.toISOString().slice(0,10);
+    document.getElementById('input-tanggal-mulai').value = d;
+    document.getElementById('input-tanggal-akhir').value = d;
+    document.getElementById('my-tanggal-mulai').value = d;
+    document.getElementById('my-tanggal-akhir').value = d;
+
+    loadSessionFromStorage();
+    applyRoleVisibility();
+    loadKioskInfo();
+    updateStats();
+    loadFaceModels();
+
+    if (APP.session.token && APP.session.role === 'Admin') {
+      loadInitialData();
+    }
+  };
+
+  function loadKioskInfo() {
+    callApi('getKioskInfo', {}).then(function (res) {
+      if (res && res.success) {
+        APP.instansi = res.instansi;
+        document.getElementById('instansi-subtitle').innerText = APP.instansi + ' • Presensi Wajah Guru & Pegawai';
+        document.getElementById('set-instansi').value = APP.instansi;
+      }
+    }).catch(function () {});
+  }
+
+  function loadInitialData() {
+    callApi('getInitialData', {}).then(onInitialData).catch(onServerError);
+  }
+
+  function onInitialData(res) {
+    if (!res || !res.success) {
+      Swal.fire('Gagal Memuat Data', (res && res.message) ? res.message : 'Tidak dapat terhubung ke Spreadsheet. Jalankan Setup Database dari menu Ekstensi > Apps Script.', 'error');
+      return;
+    }
+    APP.teachers = res.teachers || [];
+    APP.mapel = res.mapel || [];
+    APP.instansi = res.instansi;
+    APP.jamMasuk = res.jamMasuk;
+    APP.toleransi = res.toleransi;
+    APP.tarifPotongan = res.tarifPotongan;
+
+    document.getElementById('instansi-subtitle').innerText = APP.instansi + ' • Presensi Wajah Guru & Pegawai';
+    document.getElementById('set-instansi').value = APP.instansi;
+    document.getElementById('set-jam-masuk').value = APP.jamMasuk;
+    document.getElementById('set-toleransi').value = APP.toleransi;
+    document.getElementById('set-tarif').value = APP.tarifPotongan;
+
+    renderMapelDatalist();
+    renderGuruTable();
+    updateStats();
+  }
+
+  function onServerError(err) {
+    var msg = (err && err.message) ? err.message : String(err);
+    Swal.fire({ title: 'Terjadi Kesalahan', html: escapeHtml(msg).replace(/\n/g, '<br>'), icon: 'error' });
+  }
+
+  // ===================== TAB SWITCH =====================
+  function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(function (el) { el.classList.add('hidden'); });
+    document.getElementById('tab-' + id).classList.remove('hidden');
+    document.querySelectorAll('.nav-btn').forEach(function (el) {
+      el.classList.remove('active');
+      el.style.boxShadow = 'none';
+    });
+    if (btn) {
+      btn.classList.add('active');
+      btn.style.boxShadow = 'inset 0 -2px 0 0 #10b981';
+    }
+    if (id !== 'absensi') {
+      // hemat resource: hentikan loop scan saat pindah tab (kamera tetap bisa menyala jika user mau)
+    }
+  }
+
+  // ===================== FACE MODELS =====================
+  function loadFaceModels() {
+    Promise.all([
+      faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+      faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+    ]).then(function () {
+      APP.modelsLoaded = true;
+      var box = document.getElementById('model-loading-box');
+      if (box) box.style.display = 'none';
+    }).catch(function (err) {
+      var box = document.getElementById('model-loading-box');
+      if (box) {
+        box.innerHTML = '<p class="text-xs text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Gagal memuat model wajah. Periksa koneksi internet lalu muat ulang halaman. (' + (err && err.message ? err.message : err) + ')</p>';
+      }
+    });
+  }
+
+  function loadMyFaceDescriptor() {
+    var box = document.getElementById('face-not-registered-box');
+    box.classList.add('hidden');
+    box.classList.remove('flex');
+    APP.myFaceDescriptor = null;
+    callApi('getMyFaceDescriptor', {}).then(function (res) {
+      if (res && res.success) {
+        var arr = [];
+        try { arr = JSON.parse(res.descriptor); } catch (e) { arr = []; }
+        if (arr.length === 128) {
+          APP.myFaceDescriptor = { nip: res.nip, nama: res.nama, descriptor: arr };
+          return;
+        }
+      }
+      box.classList.remove('hidden');
+      box.classList.add('flex');
+    }).catch(function () {});
+  }
+
+  // ===================== KAMERA ABSENSI =====================
+  function startAttendanceCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      Swal.fire('Kamera Tidak Didukung', 'Browser ini tidak mendukung akses kamera.', 'error');
+      return;
+    }
+    if (!APP.myFaceDescriptor) {
+      Swal.fire('Wajah Belum Terdaftar', 'Wajah Anda belum didaftarkan oleh Admin. Hubungi Admin terlebih dahulu.', 'warning');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then(function (stream) {
+        APP.attendanceStream = stream;
+        var video = document.getElementById('video-feed');
+        video.srcObject = stream;
+        document.getElementById('camera-off-overlay').style.display = 'none';
+        startScanLoop();
+      })
+      .catch(function (err) {
+        Swal.fire('Akses Kamera Ditolak', 'Izinkan akses kamera untuk melakukan absensi wajah. (' + err.message + ')', 'error');
+      });
+  }
+
+  function stopAttendanceCamera() {
+    if (APP.scanTimer) { clearInterval(APP.scanTimer); APP.scanTimer = null; }
+    if (APP.attendanceStream) {
+      APP.attendanceStream.getTracks().forEach(function (t) { t.stop(); });
+      APP.attendanceStream = null;
+    }
+    var overlay = document.getElementById('camera-off-overlay');
+    if (overlay) overlay.style.display = 'flex';
+    setScanStatus('Menunggu deteksi wajah...', 'neutral');
+  }
+
+  function startScanLoop() {
+    if (APP.scanTimer) clearInterval(APP.scanTimer);
+    APP.scanTimer = setInterval(performScan, 1300);
+  }
+
+  function performScan() {
+    if (!APP.modelsLoaded || APP.isProcessingScan || !APP.attendanceStream || !APP.myFaceDescriptor) return;
+    var video = document.getElementById('video-feed');
+    if (!video.videoWidth) return;
+
+    faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor()
+      .then(function (detection) {
+        if (!detection) {
+          setScanStatus('Menunggu deteksi wajah...', 'neutral');
+          hideFaceBox();
+          return;
+        }
+        drawFaceBox(video, detection.detection.box);
+
+        // Verifikasi 1-lawan-1: cocokkan HANYA dengan wajah milik akun yang sedang login
+        var dist = faceapi.euclideanDistance(Array.from(detection.descriptor), APP.myFaceDescriptor.descriptor);
+
+        if (dist < APP.MATCH_THRESHOLD) {
+          setScanStatus('Wajah cocok dengan ' + APP.myFaceDescriptor.nama + ' — memproses absensi...', 'info');
+          APP.isProcessingScan = true;
+          callApi('markMyAttendance', {})
+            .then(function (res) { onScanResult(res); APP.isProcessingScan = false; })
+            .catch(function (err) { onServerError(err); APP.isProcessingScan = false; });
+        } else {
+          setScanStatus('Wajah tidak cocok dengan akun ' + APP.myFaceDescriptor.nama + ' yang sedang login.', 'warning');
+        }
+      })
+      .catch(function () { /* diamkan error deteksi per-frame agar loop tetap jalan */ });
+  }
+
+  function drawFaceBox(video, box) {
+    var el = document.getElementById('face-box');
+    var scaleX = video.clientWidth / video.videoWidth;
+    var scaleY = video.clientHeight / video.videoHeight;
+    el.style.display = 'block';
+    el.style.left = (box.x * scaleX) + 'px';
+    el.style.top = (box.y * scaleY) + 'px';
+    el.style.width = (box.width * scaleX) + 'px';
+    el.style.height = (box.height * scaleY) + 'px';
+  }
+  function hideFaceBox() { document.getElementById('face-box').style.display = 'none'; }
+
+  function setScanStatus(text, type) {
+    var el = document.getElementById('scan-status-text');
+    var box = document.getElementById('scan-status-box');
+    el.innerText = text;
+    var colors = {
+      neutral: ['border-slate-800', 'text-slate-400'],
+      info: ['border-blue-800', 'text-blue-300'],
+      warning: ['border-amber-800', 'text-amber-300'],
+      success: ['border-emerald-800', 'text-emerald-300'],
+      error: ['border-rose-800', 'text-rose-300']
+    };
+    box.className = 'mt-4 p-4 rounded-2xl border text-center bg-slate-950 ' + colors[type][0];
+    el.className = 'text-sm font-semibold ' + colors[type][1];
+  }
+
+  function onScanResult(res) {
+    if (!res || !res.success) {
+      setScanStatus(res && res.message ? res.message : 'Terjadi kesalahan saat mencatat absensi.', 'error');
+      return;
+    }
+    if (res.status === 'Sudah Absen') {
+      setScanStatus(res.message, 'info');
+      return;
+    }
+    var type = (res.status === 'Terlambat') ? 'warning' : 'success';
+    setScanStatus(res.message, type);
+    addLogEntry(res);
+    updateStats();
+    // Absen berhasil -> hentikan kamera & logout otomatis supaya perangkat siap dipakai orang berikutnya
+    stopAttendanceCamera();
+    var counter = 4;
+    var iv = setInterval(function () {
+      setScanStatus(res.message + ' — logout otomatis dalam ' + counter + ' detik...', type);
+      counter--;
+      if (counter < 0) {
+        clearInterval(iv);
+        doLogout(true);
+      }
+    }, 1000);
+  }
+
+  function addLogEntry(res) {
+    var container = document.getElementById('log-list-container');
+    var empty = document.getElementById('log-empty-state');
+    if (empty) empty.remove();
+
+    var isLate = res.status === 'Terlambat';
+    var now = new Date();
+    var jam = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+    var div = document.createElement('div');
+    div.className = 'p-3 rounded-2xl border flex items-center gap-3 ' + (isLate ? 'bg-amber-950/20 border-amber-900/40' : 'bg-emerald-950/20 border-emerald-900/40');
+    div.innerHTML =
+      '<div class="p-2 rounded-xl ' + (isLate ? 'bg-amber-500/10 text-amber-400' : 'bg-emerald-500/10 text-emerald-400') + '"><i class="fa-solid ' + (isLate ? 'fa-clock' : 'fa-check') + '"></i></div>' +
+      '<div class="flex-1"><p class="text-xs font-bold text-white">' + res.nama + '</p>' +
+      '<p class="text-[10px] text-slate-400">' + (res.jabatan||'') + ' • ' + jam + (isLate ? ' • Terlambat ' + res.menitTerlambat + ' menit' : ' • Tepat Waktu') + '</p></div>';
+    container.prepend(div);
+  }
+
+  // ===================== STATS =====================
+  function updateStats() {
+    callApi('getPublicKioskStats', {}).then(function (res) {
+      if (!res || !res.success) return;
+      document.getElementById('stat-total-guru').innerText = res.totalGuru;
+      document.getElementById('stat-hadir-hari-ini').innerText = res.hadirHariIni;
+      document.getElementById('stat-terlambat-hari-ini').innerText = res.terlambatHariIni;
+      document.getElementById('stat-belum-absen').innerText = res.belumAbsen;
+    }).catch(function () {});
+  }
+
+  // ===================== DATA GURU: TABLE =====================
+  function renderMapelDatalist() {
+    var dl = document.getElementById('mapel-list');
+    dl.innerHTML = APP.mapel.map(function (m) { return '<option value="' + escapeHtml(m) + '">'; }).join('');
+  }
+
+  function renderGuruTable() {
+    var body = document.getElementById('guru-table-body');
+    if (APP.teachers.length === 0) {
+      body.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">Belum ada data guru. Klik "Tambah Guru" untuk mulai.</td></tr>';
+      return;
+    }
+    body.innerHTML = APP.teachers.map(function (g) {
+      var hasFace = g.faceDescriptor && g.faceDescriptor.length > 10;
+      return '<tr class="hover:bg-slate-900/40">' +
+        '<td class="px-4 py-3 font-mono">' + escapeHtml(g.nip) + '</td>' +
+        '<td class="px-4 py-3 font-semibold text-white">' + escapeHtml(g.nama) + '</td>' +
+        '<td class="px-4 py-3">' + escapeHtml(g.jabatan) + '</td>' +
+        '<td class="px-4 py-3">' + escapeHtml(g.mapel || '-') + '</td>' +
+        '<td class="px-4 py-3">' + escapeHtml(g.status || '-') + '</td>' +
+        '<td class="px-4 py-3 text-right">' + formatRupiah(g.gajiPokok) + '</td>' +
+        '<td class="px-4 py-3 text-right">' + formatRupiah(g.tunjangan) + '</td>' +
+        '<td class="px-4 py-3 text-center">' + (hasFace ? '<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i></span>' : '<span class="text-slate-600"><i class="fa-solid fa-circle-xmark"></i></span>') + '</td>' +
+        '<td class="px-4 py-3 text-center">' +
+          '<button onclick="openEditModal(\'' + escapeJs(g.nip) + '\')" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fa-solid fa-pen"></i></button>' +
+          '<button onclick="confirmDeleteGuru(\'' + escapeJs(g.nip) + '\')" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>' +
+        '</td></tr>';
+    }).join('');
+  }
+
+  // ===================== MODAL TAMBAH/EDIT =====================
+  function openAddModal() {
+    APP.editingNip = null;
+    APP.currentEnrollDescriptor = null;
+    document.getElementById('modal-title').innerText = 'Tambah Guru';
+    document.getElementById('form-nip').value = '';
+    document.getElementById('form-nip').disabled = false;
+    document.getElementById('form-nama').value = '';
+    document.getElementById('form-jabatan').value = '';
+    document.getElementById('form-mapel').value = '';
+    document.getElementById('form-status').value = 'PNS';
+    document.getElementById('form-gaji-pokok').value = '';
+    document.getElementById('form-tunjangan').value = '';
+    document.getElementById('form-username').value = '';
+    document.getElementById('form-password').value = '';
+    document.getElementById('form-password-hint').innerText = '';
+    updateFaceBadge(false);
+    document.getElementById('guru-modal').classList.remove('hidden');
+  }
+
+  function openEditModal(nip) {
+    var g = APP.teachers.find(function (t) { return t.nip === nip; });
+    if (!g) return;
+    APP.editingNip = nip;
+    try { APP.currentEnrollDescriptor = g.faceDescriptor ? JSON.parse(g.faceDescriptor) : null; } catch (e) { APP.currentEnrollDescriptor = null; }
+
+    document.getElementById('modal-title').innerText = 'Edit Data Guru';
+    document.getElementById('form-nip').value = g.nip;
+    document.getElementById('form-nip').disabled = false;
+    document.getElementById('form-nama').value = g.nama;
+    document.getElementById('form-jabatan').value = g.jabatan;
+    document.getElementById('form-mapel').value = g.mapel || '';
+    document.getElementById('form-status').value = g.status || 'PNS';
+    document.getElementById('form-gaji-pokok').value = g.gajiPokok || 0;
+    document.getElementById('form-tunjangan').value = g.tunjangan || 0;
+    document.getElementById('form-username').value = '';
+    document.getElementById('form-password').value = '';
+    document.getElementById('form-password-hint').innerText = '(kosongkan = tidak diubah)';
+    updateFaceBadge(!!APP.currentEnrollDescriptor);
+    document.getElementById('guru-modal').classList.remove('hidden');
+  }
+
+  function closeGuruModal() {
+    stopEnrollCamera();
+    document.getElementById('guru-modal').classList.add('hidden');
+  }
+
+  function updateFaceBadge(registered) {
+    var badge = document.getElementById('face-status-badge');
+    if (registered) {
+      badge.innerText = 'TERDAFTAR';
+      badge.className = 'text-[10px] px-2 py-1 rounded-full bg-emerald-500/20 text-emerald-400 font-bold';
+    } else {
+      badge.innerText = 'BELUM TERDAFTAR';
+      badge.className = 'text-[10px] px-2 py-1 rounded-full bg-slate-800 text-slate-400 font-bold';
+    }
+  }
+
+  function saveGuru() {
+    var nip = document.getElementById('form-nip').value.trim();
+    var nama = document.getElementById('form-nama').value.trim();
+    var jabatan = document.getElementById('form-jabatan').value.trim();
+    var mapel = document.getElementById('form-mapel').value.trim();
+    var status = document.getElementById('form-status').value;
+    var gajiPokok = Number(document.getElementById('form-gaji-pokok').value) || 0;
+    var tunjangan = Number(document.getElementById('form-tunjangan').value) || 0;
+    var descriptorStr = APP.currentEnrollDescriptor ? JSON.stringify(APP.currentEnrollDescriptor) : '';
+    var username = document.getElementById('form-username').value.trim();
+    var password = document.getElementById('form-password').value;
+
+    if (!nip || !nama || !jabatan) {
+      Swal.fire('Data Belum Lengkap', 'NIP, Nama, dan Jabatan wajib diisi.', 'warning');
+      return;
+    }
+    if (username && !password && APP.editingNip === null) {
+      Swal.fire('Password Belum Diisi', 'Isi password untuk akun login guru ini (wajib saat pertama kali membuat akun).', 'warning');
+      return;
+    }
+
+    Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); }, allowOutsideClick: false });
+
+    if (APP.editingNip === null) {
+      callApi('addGuru', { nip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password })
+        .then(onSaveGuruResult).catch(onServerError);
+    } else {
+      callApi('editGuru', { oldNip: APP.editingNip, newNip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password })
+        .then(onSaveGuruResult).catch(onServerError);
+    }
+  }
+
+  function onSaveGuruResult(res) {
+    Swal.close();
+    if (!res || !res.success) {
+      Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
+      return;
+    }
+    Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false });
+    closeGuruModal();
+    loadInitialData();
+  }
+
+  function confirmDeleteGuru(nip) {
+    var g = APP.teachers.find(function (t) { return t.nip === nip; });
+    Swal.fire({
+      title: 'Hapus Data Guru?',
+      text: 'Data ' + (g ? g.nama : nip) + ' akan dihapus permanen.',
+      icon: 'warning', showCancelButton: true,
+      confirmButtonText: 'Ya, Hapus', cancelButtonText: 'Batal',
+      confirmButtonColor: '#dc2626'
+    }).then(function (result) {
+      if (result.isConfirmed) {
+        callApi('deleteGuru', { nip: nip }).then(function (res) {
+          if (res && res.success) { loadInitialData(); Swal.fire('Terhapus', res.message, 'success'); }
+          else Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
+        }).catch(onServerError);
+      }
+    });
+  }
+
+  // ===================== ENROLL WAJAH (dalam modal) =====================
+  function startEnrollCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      Swal.fire('Kamera Tidak Didukung', 'Browser ini tidak mendukung akses kamera.', 'error');
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then(function (stream) {
+        APP.enrollStream = stream;
+        document.getElementById('enroll-video').srcObject = stream;
+        document.getElementById('enroll-camera-off').style.display = 'none';
+      })
+      .catch(function (err) {
+        Swal.fire('Akses Kamera Ditolak', err.message, 'error');
+      });
+  }
+
+  function stopEnrollCamera() {
+    if (APP.enrollStream) {
+      APP.enrollStream.getTracks().forEach(function (t) { t.stop(); });
+      APP.enrollStream = null;
+    }
+    var off = document.getElementById('enroll-camera-off');
+    if (off) off.style.display = 'flex';
+  }
+
+  function captureEnrollFace() {
+    if (!APP.modelsLoaded) {
+      Swal.fire('Model Belum Siap', 'Model pengenalan wajah masih dimuat, coba lagi sebentar.', 'info');
+      return;
+    }
+    var video = document.getElementById('enroll-video');
+    if (!APP.enrollStream || !video.videoWidth) {
+      Swal.fire('Kamera Belum Aktif', 'Aktifkan kamera terlebih dahulu.', 'warning');
+      return;
+    }
+    faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+      .withFaceLandmarks()
+      .withFaceDescriptor()
+      .then(function (detection) {
+        if (!detection) {
+          Swal.fire('Wajah Tidak Terdeteksi', 'Pastikan wajah terlihat jelas dan pencahayaan cukup.', 'warning');
+          return;
+        }
+        APP.currentEnrollDescriptor = Array.from(detection.descriptor).map(function (v) { return Math.round(v * 1e6) / 1e6; });
+        updateFaceBadge(true);
+        Swal.fire({ icon: 'success', title: 'Wajah Berhasil Diambil', timer: 1200, showConfirmButton: false });
+      })
+      .catch(function (err) {
+        Swal.fire('Gagal Mendeteksi Wajah', err.message || String(err), 'error');
+      });
+  }
+
+  // ===================== PERHITUNGAN GAJI =====================
+  function hitungGaji() {
+    var periode = document.getElementById('input-periode-gaji').value;
+    if (!periode) { Swal.fire('Pilih Periode', 'Silakan pilih bulan & tahun terlebih dahulu.', 'warning'); return; }
+    Swal.fire({ title: 'Menghitung Gaji...', didOpen: function(){ Swal.showLoading(); }, allowOutsideClick: false });
+    callApi('calculatePayroll', { periode: periode }).then(function (res) {
+      Swal.close();
+      if (!res || !res.success) { Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error'); return; }
+      APP.payrollCache = res;
+      renderPayrollTable(res);
+    }).catch(function (err) { Swal.close(); onServerError(err); });
+  }
+
+  function renderPayrollTable(res) {
+    var body = document.getElementById('gaji-table-body');
+    if (!res.data || res.data.length === 0) {
+      body.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-500">Tidak ada data guru / absensi pada periode ini.</td></tr>';
+      return;
+    }
+    body.innerHTML = res.data.map(function (row) {
+      // [periode, nip, nama, jabatan, totalHadir, totalTerlambat, totalMenitTerlambat, gajiPokok, tunjangan, potongan, gajiBersih, tglHitung]
+      return '<tr class="hover:bg-slate-900/40">' +
+        '<td class="px-3 py-3 font-mono">' + escapeHtml(row[1]) + '</td>' +
+        '<td class="px-3 py-3 font-semibold text-white">' + escapeHtml(row[2]) + '</td>' +
+        '<td class="px-3 py-3">' + escapeHtml(row[3]) + '</td>' +
+        '<td class="px-3 py-3 text-center">' + row[4] + '</td>' +
+        '<td class="px-3 py-3 text-center text-amber-400">' + row[5] + '</td>' +
+        '<td class="px-3 py-3 text-center">' + row[6] + '</td>' +
+        '<td class="px-3 py-3 text-right">' + formatRupiah(row[7]) + '</td>' +
+        '<td class="px-3 py-3 text-right">' + formatRupiah(row[8]) + '</td>' +
+        '<td class="px-3 py-3 text-right text-rose-400">' + formatRupiah(row[9]) + '</td>' +
+        '<td class="px-3 py-3 text-right text-emerald-400 font-bold">' + formatRupiah(row[10]) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function exportPayrollExcel() {
+    if (!APP.payrollCache || !APP.payrollCache.data || APP.payrollCache.data.length === 0) {
+      Swal.fire('Belum Ada Data', 'Hitung gaji terlebih dahulu.', 'info'); return;
+    }
+    var ws = XLSX.utils.aoa_to_sheet([APP.payrollCache.headers].concat(APP.payrollCache.data));
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Gaji');
+    XLSX.writeFile(wb, 'Perhitungan_Gaji_Guru.xlsx');
+  }
+
+  function exportPayrollPDF() {
+    if (!APP.payrollCache || !APP.payrollCache.data || APP.payrollCache.data.length === 0) {
+      Swal.fire('Belum Ada Data', 'Hitung gaji terlebih dahulu.', 'info'); return;
+    }
+    var docPdf = new jspdf.jsPDF({ orientation: 'landscape' });
+    docPdf.text('Laporan Perhitungan Gaji Guru', 14, 12);
+    docPdf.autoTable({ head: [APP.payrollCache.headers], body: APP.payrollCache.data, startY: 18, styles: { fontSize: 7 } });
+    docPdf.save('Perhitungan_Gaji_Guru.pdf');
+  }
+
+  // ===================== LAPORAN ABSENSI =====================
+  function loadLaporan() {
+    var start = document.getElementById('input-tanggal-mulai').value;
+    var end = document.getElementById('input-tanggal-akhir').value;
+    if (!start || !end) { Swal.fire('Lengkapi Tanggal', 'Pilih rentang tanggal terlebih dahulu.', 'warning'); return; }
+    callApi('getReportData', { startDateStr: start, endDateStr: end }).then(function (res) {
+      if (!res || !res.success) { Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error'); return; }
+      APP.laporanCache = res;
+      renderLaporanTable(res);
+    }).catch(onServerError);
+  }
+
+  function renderLaporanTable(res) {
+    var body = document.getElementById('laporan-table-body');
+    if (!res.data || res.data.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">Tidak ada data pada rentang tanggal ini.</td></tr>';
+      return;
+    }
+    body.innerHTML = res.data.map(function (row) {
+      var isLate = row[4] === 'Terlambat';
+      return '<tr class="hover:bg-slate-900/40">' +
+        '<td class="px-3 py-3">' + escapeHtml(row[0]) + '</td>' +
+        '<td class="px-3 py-3 font-mono">' + escapeHtml(row[1]) + '</td>' +
+        '<td class="px-3 py-3 font-semibold text-white">' + escapeHtml(row[2]) + '</td>' +
+        '<td class="px-3 py-3">' + escapeHtml(row[3]) + '</td>' +
+        '<td class="px-3 py-3">' + (isLate ? '<span class="text-amber-400 font-bold">Terlambat</span>' : '<span class="text-emerald-400 font-bold">Hadir</span>') + '</td>' +
+        '<td class="px-3 py-3 text-center">' + (row[5] || 0) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  function exportLaporanExcel() {
+    if (!APP.laporanCache || !APP.laporanCache.data || APP.laporanCache.data.length === 0) {
+      Swal.fire('Belum Ada Data', 'Tampilkan laporan terlebih dahulu.', 'info'); return;
+    }
+    var ws = XLSX.utils.aoa_to_sheet([APP.laporanCache.headers].concat(APP.laporanCache.data));
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Absensi Guru');
+    XLSX.writeFile(wb, 'Laporan_Absensi_Guru.xlsx');
+  }
+
+  function exportLaporanPDF() {
+    if (!APP.laporanCache || !APP.laporanCache.data || APP.laporanCache.data.length === 0) {
+      Swal.fire('Belum Ada Data', 'Tampilkan laporan terlebih dahulu.', 'info'); return;
+    }
+    var docPdf = new jspdf.jsPDF();
+    docPdf.text('Laporan Absensi Guru', 14, 12);
+    docPdf.autoTable({ head: [APP.laporanCache.headers], body: APP.laporanCache.data, startY: 18, styles: { fontSize: 8 } });
+    docPdf.save('Laporan_Absensi_Guru.pdf');
+  }
+
+  // ===================== LAPORAN SAYA (GURU) =====================
+  function loadMyReport() {
+    var start = document.getElementById('my-tanggal-mulai').value;
+    var end = document.getElementById('my-tanggal-akhir').value;
+    if (!start || !end) { Swal.fire('Lengkapi Tanggal', 'Pilih rentang tanggal terlebih dahulu.', 'warning'); return; }
+    callApi('getMyReportData', { startDateStr: start, endDateStr: end }).then(function (res) {
+      if (!res || !res.success) { Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error'); return; }
+      APP.myReportCache = res;
+      var body = document.getElementById('laporansaya-table-body');
+      if (!res.data || res.data.length === 0) {
+        body.innerHTML = '<tr><td colspan="3" class="text-center py-8 text-slate-500">Tidak ada data pada rentang tanggal ini.</td></tr>';
+        return;
+      }
+      body.innerHTML = res.data.map(function (row) {
+        var isLate = row[4] === 'Terlambat';
+        return '<tr class="hover:bg-slate-900/40">' +
+          '<td class="px-3 py-3">' + escapeHtml(row[0]) + '</td>' +
+          '<td class="px-3 py-3">' + (isLate ? '<span class="text-amber-400 font-bold">Terlambat</span>' : '<span class="text-emerald-400 font-bold">Hadir</span>') + '</td>' +
+          '<td class="px-3 py-3 text-center">' + (row[5] || 0) + '</td>' +
+        '</tr>';
+      }).join('');
+    }).catch(onServerError);
+  }
+
+  // ===================== SLIP GAJI SAYA (GURU) =====================
+  function loadMyPayrollSlip() {
+    var periode = document.getElementById('my-periode-gaji').value;
+    if (!periode) { Swal.fire('Pilih Periode', 'Silakan pilih bulan & tahun terlebih dahulu.', 'warning'); return; }
+    var box = document.getElementById('gajisaya-content');
+    box.innerHTML = '<div class="flex justify-center py-6"><div class="spinner"></div></div>';
+    callApi('getMyPayrollSlip', { periode: periode }).then(function (res) {
+      if (!res || !res.success) {
+        box.innerHTML = '<p class="text-rose-400 text-sm text-center py-4">' + escapeHtml((res && res.message) || 'Terjadi kesalahan.') + '</p>';
+        return;
+      }
+      var row = res.data; // [periode, nip, nama, jabatan, hadir, terlambat, menitTerlambat, gajiPokok, tunjangan, potongan, gajiBersih, tglHitung]
+      box.innerHTML =
+        '<div class="grid grid-cols-2 gap-3 text-left">' +
+          '<div class="col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Nama</p><p class="text-sm font-bold text-white">' + escapeHtml(row[2]) + ' <span class="text-slate-500 font-normal">(' + escapeHtml(row[3]) + ')</span></p></div>' +
+          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Total Hadir</p><p class="text-lg font-bold text-white">' + row[4] + ' hari</p></div>' +
+          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Total Terlambat</p><p class="text-lg font-bold text-amber-400">' + row[5] + ' hari (' + row[6] + ' menit)</p></div>' +
+          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Gaji Pokok</p><p class="text-sm font-bold text-white">' + formatRupiah(row[7]) + '</p></div>' +
+          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Tunjangan</p><p class="text-sm font-bold text-white">' + formatRupiah(row[8]) + '</p></div>' +
+          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Potongan Keterlambatan</p><p class="text-sm font-bold text-rose-400">- ' + formatRupiah(row[9]) + '</p></div>' +
+          '<div class="bg-emerald-950/30 border border-emerald-800/60 rounded-2xl p-4"><p class="text-[10px] text-emerald-500 uppercase font-bold">Gaji Bersih</p><p class="text-lg font-black text-emerald-400">' + formatRupiah(row[10]) + '</p></div>' +
+        '</div>' +
+        '<p class="text-[10px] text-slate-600 mt-3 text-center">Dihitung oleh Admin pada ' + escapeHtml(row[11]) + '</p>';
+    }).catch(function (err) {
+      box.innerHTML = '<p class="text-rose-400 text-sm text-center py-4">' + escapeHtml(err.message || String(err)) + '</p>';
+    });
+  }
+
+  // ===================== PENGATURAN =====================
+  function saveSettingsForm() {
+    var instansi = document.getElementById('set-instansi').value.trim();
+    var jamMasuk = document.getElementById('set-jam-masuk').value;
+    var toleransi = Number(document.getElementById('set-toleransi').value) || 0;
+    var tarif = Number(document.getElementById('set-tarif').value) || 0;
+
+    if (!instansi || !jamMasuk) {
+      Swal.fire('Data Belum Lengkap', 'Nama instansi dan jam masuk wajib diisi.', 'warning'); return;
+    }
+
+    Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); }, allowOutsideClick: false });
+    callApi('saveSettings', { instansi: instansi, jamMasuk: jamMasuk, toleransi: toleransi, tarifPotongan: tarif }).then(function (res) {
+      Swal.close();
+      if (res && res.success) {
+        Swal.fire({ icon: 'success', title: 'Tersimpan', text: res.message, timer: 1500, showConfirmButton: false });
+        loadInitialData();
+      } else {
+        Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
+      }
+    }).catch(function (err) { Swal.close(); onServerError(err); });
+  }
+
+  // ===================== UTIL =====================
+  function formatRupiah(n) {
+    n = Number(n) || 0;
+    return 'Rp ' + n.toLocaleString('id-ID');
+  }
+  function escapeHtml(str) {
+    if (str === undefined || str === null) return '';
+    return String(str).replace(/[&<>"']/g, function (m) {
+      return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[m];
+    });
+  }
+  function escapeJs(str) { return String(str).replace(/'/g, "\\'"); }
+
+  // ===================== PWA: SERVICE WORKER & INSTALL PROMPT =====================
+  function registerServiceWorker() {
+    if (!('serviceWorker' in navigator)) return;
+    // ./sw.js (relatif terhadap lokasi Index.html saat di-hosting, mis. Netlify/GitHub Pages).
+    navigator.serviceWorker.register('sw.js').catch(function (err) {
+      console.warn('Service worker gagal didaftarkan (aplikasi tetap berjalan normal tanpa mode offline):', err);
+    });
+  }
+
+  var _deferredInstallPrompt = null;
+  window.addEventListener('beforeinstallprompt', function (e) {
+    e.preventDefault();
+    _deferredInstallPrompt = e;
+    var btn = document.getElementById('btn-install-app');
+    btn.classList.remove('hidden');
+    btn.classList.add('flex');
+  });
+
+  function installApp() {
+    if (!_deferredInstallPrompt) return;
+    _deferredInstallPrompt.prompt();
+    _deferredInstallPrompt.userChoice.finally(function () {
+      _deferredInstallPrompt = null;
+      var btn = document.getElementById('btn-install-app');
+      btn.classList.add('hidden');
+      btn.classList.remove('flex');
+    });
+  }
+
+  window.addEventListener('appinstalled', function () {
+    var btn = document.getElementById('btn-install-app');
+    btn.classList.add('hidden');
+    btn.classList.remove('flex');
+  });
+</script>
+</body>
+</html>
