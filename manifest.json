@@ -18,14 +18,27 @@
 "dir": "ltr",
 "categories": [
 "education",
-"productivity", "utilities"
+"productivity",
+"utilities"
 ],
 "prefer_related_applications": false,
-"related_applications": [],
-"iarc_rating_id": "",
+"related_applications": [
+{
+"platform": "play",
+"url": "https://play.google.com/store/apps/details?id=com.absensiguru.app",
+"id": "com.absensiguru.app"
+}
+],
+"iarc_rating_id": "e84b2320-80ef-482d-8888-d21531c3a647",
 "scope_extensions": [
 {
 "origin": "surdi152-maker.github.io"
+}
+],
+"protocol_handlers": [
+{
+"protocol": "web+absensiguru",
+"url": "/my-gas-app/?type=%s"
 }
 ],
 "launch_handler": {
