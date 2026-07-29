@@ -8,6 +8,7 @@
 "display": "standalone",
 "display_override": [
 "window-controls-overlay",
+"tabbed",
 "standalone",
 "minimal-ui"
 ],
@@ -20,6 +21,43 @@
 "education",
 "productivity",
 "utilities"
+],
+"share_target": {
+"action": "/my-gas-app/",
+"method": "GET",
+"params": {
+"title": "title",
+"text": "text",
+"url": "url"
+}
+},
+"edge_side_panel": {
+"preferred_width": 400
+},
+"widgets": [
+{
+"name": "Quick Absensi Guru",
+"short_name": "Absensi",
+"description": "Widget pemindai absensi cepat dan info kehadiran harian",
+"tag": "absensi-guru-widget",
+"template": "widget-template",
+"ms_ac_template": "widget-template.json",
+"data": "widget-data.json",
+"type": "text/html",
+"screenshots": [
+{
+"src": "https://placehold.co/400x300/4f46e5/ffffff.png?text=Widget+Absensi",
+"sizes": "400x300",
+"label": "Tampilan Widget Absensi Guru"
+}
+],
+"icons": [
+{
+"src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
+"sizes": "192x192"
+}
+]
+}
 ],
 "prefer_related_applications": false,
 "related_applications": [
