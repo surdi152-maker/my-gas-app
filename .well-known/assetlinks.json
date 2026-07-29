@@ -3,6 +3,6 @@
       "target": {
         "namespace": "android_app",
         "package_name": "com.absensiguru.app",
-        "sha256_cert_fingerprints": ["D8:04:D1:8F:D5:F4:BD:94:CD:CF:D7:B4:BC:28:D0:B9:D9:4C:4A:F2:CF:74:DC:DF:A6:6F:FF:49:10:07:E2:C7"]
+        "sha256_cert_fingerprints": ["6E:DF:3D:C2:58:54:DE:63:7A:58:05:1B:E1:A0:27:78:F5:70:82:13:B0:41:32:EF:A9:1E:A8:68:C7:48:01:E9"]
       }
     }]
