@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.absensiguru.app",
+        "sha256_cert_fingerprints": ["D8:04:D1:8F:D5:F4:BD:94:CD:CF:D7:B4:BC:28:D0:B9:D9:4C:4A:F2:CF:74:DC:DF:A6:6F:FF:49:10:07:E2:C7"]
+      }
+    }]
