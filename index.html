@@ -32,19 +32,45 @@
 
   <style>
     body {
-      background-color: #0f172a;
+      background-color: #0b1220;
+      background-image:
+        radial-gradient(ellipse 900px 500px at 15% -10%, rgba(217,180,90,0.10), transparent 60%),
+        radial-gradient(ellipse 900px 600px at 100% 0%, rgba(59,130,246,0.10), transparent 55%);
       color: #f8fafc;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    .custom-gradient { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); }
+    .custom-gradient { background: linear-gradient(160deg, #131f34 0%, #0b1220 55%, #0b1220 100%); }
+
+    /* ===== Kartu "kaca" mewah dengan aksen glossy ===== */
+    .glass-card, .glass-card-solid {
+      position: relative;
+      background: linear-gradient(165deg, rgba(30,41,59,0.55) 0%, rgba(15,23,42,0.65) 100%);
+      border: 1px solid rgba(217,180,90,0.14);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 20px 40px -20px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+    .glass-card-solid { background: linear-gradient(165deg, rgba(30,41,59,0.96) 0%, rgba(11,18,32,0.98) 100%); }
+    .glass-card::before, .glass-card-solid::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(115deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0) 30%);
+    }
+    .glass-card::after, .glass-card-solid::after {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(217,180,90,0.55), transparent);
+    }
+    .stat-card { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+    .stat-card:hover { transform: translateY(-3px); border-color: rgba(217,180,90,0.35); box-shadow: 0 20px 40px -18px rgba(217,180,90,0.25); }
+
     .card-glow:hover {
-      box-shadow: 0 10px 25px -5px rgba(59, 130, 246, 0.3);
+      box-shadow: 0 20px 40px -12px rgba(217,180,90,0.25), 0 0 0 1px rgba(217,180,90,0.2);
       transform: translateY(-2px);
       transition: all 0.3s ease;
     }
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: #1e293b; }
-    ::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: linear-gradient(#d9b45a, #b8912f); border-radius: 3px; }
 
     @keyframes scan { 0% { top: 0%; } 50% { top: 100%; } 100% { top: 0%; } }
     .scan-line {
@@ -53,13 +79,58 @@
       animation: scan 2.2s linear infinite; z-index: 20;
     }
     .tab-content.hidden { display: none; }
-    .nav-btn.active { background-color: #0f172a; }
+
+    /* ===== Header & branding mewah ===== */
+    .app-header {
+      background: linear-gradient(180deg, rgba(19,31,52,0.92) 0%, rgba(11,18,32,0.92) 100%);
+      border-bottom: 1px solid rgba(217,180,90,0.25);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset;
+    }
+    .brand-icon {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 55%, #0f172a 100%);
+      box-shadow: 0 8px 20px -6px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+    }
+    .luxe-title {
+      background: linear-gradient(90deg, #f8fafc 0%, #d9b45a 55%, #f8fafc 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+
+    /* ===== Navigasi tab dengan aksen emas interaktif ===== */
+    .nav-btn { position: relative; transition: color 0.2s ease, background 0.2s ease; }
+    .nav-btn.active { background: linear-gradient(180deg, rgba(217,180,90,0.14), rgba(15,23,42,0)); color: #f3d98a; }
+    .nav-btn.active::after {
+      content: ""; position: absolute; left: 10%; right: 10%; bottom: -1px; height: 2px;
+      background: linear-gradient(90deg, transparent, #d9b45a, transparent);
+      box-shadow: 0 0 8px 1px rgba(217,180,90,0.6);
+    }
+    .nav-btn:hover:not(.active) { background-color: rgba(217,180,90,0.06); color: #e5e7eb; }
+
+    /* ===== Tombol mewah dengan efek glossy shine saat hover ===== */
+    .btn-luxe {
+      position: relative; overflow: hidden;
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      box-shadow: 0 6px 16px -6px rgba(37,99,235,0.55), inset 0 1px 0 rgba(255,255,255,0.18);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+    .btn-luxe:hover { transform: translateY(-1px); box-shadow: 0 10px 22px -6px rgba(37,99,235,0.7), inset 0 1px 0 rgba(255,255,255,0.25); }
+    .btn-luxe::before {
+      content: ""; position: absolute; top: 0; left: -60%; width: 40%; height: 100%;
+      background: linear-gradient(115deg, transparent, rgba(255,255,255,0.35), transparent);
+      transform: skewX(-20deg); transition: left 0.5s ease;
+    }
+    .btn-luxe:hover::before { left: 120%; }
+    .btn-gold {
+      background: linear-gradient(135deg, #f3d98a, #d9b45a 55%, #b8912f);
+      color: #1a1406; font-weight: 700;
+      box-shadow: 0 6px 16px -6px rgba(217,180,90,0.5), inset 0 1px 0 rgba(255,255,255,0.4);
+    }
+
     #face-box {
       position: absolute; border: 3px solid #10b981; border-radius: 8px;
       box-shadow: 0 0 15px rgba(16,185,129,0.6); display: none; pointer-events: none;
     }
     .spinner {
-      border: 3px solid rgba(255,255,255,0.15); border-top: 3px solid #10b981;
+      border: 3px solid rgba(255,255,255,0.15); border-top: 3px solid #d9b45a;
       border-radius: 50%; width: 22px; height: 22px; animation: spin 0.9s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -68,14 +139,14 @@
 <body class="min-h-screen flex flex-col custom-gradient">
 
   <!-- NAVIGATION HEADER -->
-  <header class="bg-slate-900/80 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+  <header class="app-header backdrop-blur-md sticky top-0 z-40 px-4 py-3">
     <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
       <div class="flex items-center gap-3">
-        <div class="p-2.5 bg-blue-600 rounded-xl shadow-lg shadow-blue-500/20 text-white flex items-center justify-center">
+        <div class="p-2.5 brand-icon rounded-xl text-white flex items-center justify-center">
           <i class="fa-solid fa-user-shield text-xl md:text-2xl"></i>
         </div>
         <div>
-          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 class="text-lg md:text-xl font-bold tracking-tight luxe-title flex items-center gap-2">
             ABSENSI GURU
             <span class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono">FACE ID</span>
           </h1>
@@ -84,7 +155,7 @@
       </div>
 
       <nav id="main-nav" class="flex flex-wrap gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80 w-full md:w-auto">
-        <button onclick="switchTab('absensi', this)" class="nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition flex items-center justify-center gap-2 active" style="box-shadow: inset 0 -2px 0 0 #10b981;">
+        <button onclick="switchTab('absensi', this)" class="nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition flex items-center justify-center gap-2 active" style="box-shadow: inset 0 -2px 0 0 #d9b45a;">
           <i class="fa-solid fa-camera text-emerald-400"></i> Absensi
         </button>
         <button data-nav="admin" onclick="switchTab('datamaster', this)" class="hidden nav-btn flex-1 md:flex-none px-3 py-2 text-xs md:text-sm font-semibold rounded-lg text-slate-300 hover:text-white hover:bg-slate-900 transition items-center justify-center gap-2">
@@ -111,7 +182,7 @@
         <button id="btn-install-app" onclick="installApp()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl transition items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-download"></i> Install App
         </button>
-        <button id="btn-open-login" onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap">
+        <button id="btn-open-login" onclick="openLoginModal()" class="btn-luxe text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-2 whitespace-nowrap">
           <i class="fa-solid fa-right-to-bracket"></i> Login Admin / Guru
         </button>
         <div id="user-badge" class="hidden items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2">
@@ -132,22 +203,22 @@
 
     <!-- DASHBOARD STATS -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+      <div class="glass-card stat-card p-4 rounded-2xl flex items-center gap-4">
         <div class="p-3 bg-indigo-500/10 text-indigo-400 rounded-xl"><i class="fa-solid fa-user-tie text-lg md:text-xl"></i></div>
         <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Total Guru</p>
         <p id="stat-total-guru" class="text-lg md:text-2xl font-black text-white">0</p></div>
       </div>
-      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+      <div class="glass-card stat-card p-4 rounded-2xl flex items-center gap-4">
         <div class="p-3 bg-emerald-500/10 text-emerald-400 rounded-xl"><i class="fa-solid fa-user-check text-lg md:text-xl"></i></div>
         <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Hadir Hari Ini</p>
         <p id="stat-hadir-hari-ini" class="text-lg md:text-2xl font-black text-white">0</p></div>
       </div>
-      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+      <div class="glass-card stat-card p-4 rounded-2xl flex items-center gap-4">
         <div class="p-3 bg-amber-500/10 text-amber-400 rounded-xl"><i class="fa-solid fa-clock text-lg md:text-xl"></i></div>
         <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Terlambat Hari Ini</p>
         <p id="stat-terlambat-hari-ini" class="text-lg md:text-2xl font-black text-white">0</p></div>
       </div>
-      <div class="bg-slate-900/60 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+      <div class="glass-card stat-card p-4 rounded-2xl flex items-center gap-4">
         <div class="p-3 bg-rose-500/10 text-rose-400 rounded-xl"><i class="fa-solid fa-id-badge text-lg md:text-xl"></i></div>
         <div><p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Belum Absen</p>
         <p id="stat-belum-absen" class="text-lg md:text-2xl font-black text-white">0</p></div>
@@ -158,13 +229,13 @@
     <section id="tab-absensi" class="tab-content block">
 
       <!-- STATE: BELUM LOGIN -->
-      <div id="absensi-locked" class="max-w-md mx-auto bg-slate-900/40 border border-slate-800 rounded-3xl p-8 text-center">
+      <div id="absensi-locked" class="max-w-md mx-auto glass-card rounded-3xl p-8 text-center">
         <div class="w-14 h-14 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center mx-auto mb-4">
           <i class="fa-solid fa-lock text-2xl"></i>
         </div>
         <h2 class="text-base font-bold text-white mb-1">Login Dulu untuk Absen</h2>
         <p class="text-xs text-slate-400 mb-5">Setiap guru/staff wajib login dengan akun masing-masing sebelum melakukan absensi wajah. Ini memastikan wajah yang dicocokkan benar-benar milik akun yang login.</p>
-        <button onclick="openLoginModal()" class="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-6 py-3 rounded-xl transition inline-flex items-center gap-2">
+        <button onclick="openLoginModal()" class="btn-luxe text-white text-sm font-bold px-6 py-3 rounded-xl transition inline-flex items-center gap-2">
           <i class="fa-solid fa-right-to-bracket"></i> Login Sekarang
         </button>
       </div>
@@ -173,7 +244,7 @@
       <div id="absensi-unlocked" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
 
         <!-- LEFT: CAMERA -->
-        <div class="lg:col-span-7 bg-slate-900/40 border border-slate-800 p-4 rounded-3xl flex flex-col">
+        <div class="lg:col-span-7 glass-card p-4 rounded-3xl flex flex-col">
           <div class="mb-3 flex items-center justify-between flex-wrap gap-2">
             <div>
               <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-face-viewfinder mr-2 text-emerald-400"></i>Scan Wajah Kehadiran</h2>
@@ -219,7 +290,7 @@
         </div>
 
         <!-- RIGHT: LOG -->
-        <div class="lg:col-span-5 bg-slate-900/40 border border-slate-800 p-4 rounded-3xl flex flex-col">
+        <div class="lg:col-span-5 glass-card p-4 rounded-3xl flex flex-col">
           <h2 class="text-base md:text-lg font-bold text-white mb-3"><i class="fa-solid fa-list-check mr-2 text-blue-400"></i>Aktivitas Absensi Hari Ini</h2>
           <div id="log-list-container" class="flex-1 max-h-[520px] overflow-y-auto flex flex-col gap-3 pr-1">
             <div id="log-empty-state" class="m-auto text-center py-8">
@@ -233,7 +304,7 @@
 
     <!-- ================== TAB 2: DATA GURU ================== -->
     <section id="tab-datamaster" class="tab-content hidden">
-      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="glass-card p-6 rounded-3xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
           <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-user-tie mr-2 text-indigo-400"></i>Data Guru / Pegawai</h2>
           <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
@@ -252,6 +323,7 @@
                 <th class="px-4 py-3 text-right">Gaji Pokok</th>
                 <th class="px-4 py-3 text-right">Tunjangan</th>
                 <th class="px-4 py-3 text-center">Wajah</th>
+                <th class="px-4 py-3 text-center">Akun</th>
                 <th class="px-4 py-3 text-center">Tindakan</th>
               </tr>
             </thead>
@@ -263,12 +335,15 @@
 
     <!-- ================== TAB 3: PERHITUNGAN GAJI ================== -->
     <section id="tab-gaji" class="tab-content hidden">
-      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="glass-card p-6 rounded-3xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
           <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-sack-dollar mr-2 text-amber-400"></i>Perhitungan Gaji & Potongan Keterlambatan</h2>
           <div class="flex flex-wrap items-center gap-2">
             <input type="month" id="input-periode-gaji" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
-            <button onclick="hitungGaji()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+            <select id="filter-gaji-guru" onchange="onFilterGajiChange()" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none max-w-[160px]">
+              <option value="">Semua Guru</option>
+            </select>
+            <button onclick="hitungGaji()" class="btn-luxe text-white px-4 py-2 rounded-xl text-xs font-bold transition">
               <i class="fa-solid fa-calculator mr-1"></i> Hitung Gaji
             </button>
             <button onclick="exportPayrollExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
@@ -305,14 +380,17 @@
 
     <!-- ================== TAB 4: LAPORAN ================== -->
     <section id="tab-laporan" class="tab-content hidden">
-      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="glass-card p-6 rounded-3xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
           <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-file-lines mr-2 text-purple-400"></i>Laporan Absensi Guru</h2>
           <div class="flex flex-wrap items-center gap-2">
             <input type="date" id="input-tanggal-mulai" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
             <span class="text-xs text-slate-400">s/d</span>
             <input type="date" id="input-tanggal-akhir" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
-            <button onclick="loadLaporan()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
+            <select id="filter-laporan-guru" onchange="onFilterLaporanChange()" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none max-w-[160px]">
+              <option value="">Semua Guru</option>
+            </select>
+            <button onclick="loadLaporan()" class="btn-luxe text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
             <button onclick="exportLaporanExcel()" class="bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-excel mr-1"></i> Excel</button>
             <button onclick="exportLaporanPDF()" class="bg-rose-700 hover:bg-rose-600 text-white px-3 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> PDF</button>
           </div>
@@ -339,15 +417,11 @@
 
     <!-- ================== TAB 5: PENGATURAN ================== -->
     <section id="tab-pengaturan" class="tab-content hidden">
-      <div class="max-w-xl bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="max-w-xl glass-card p-6 rounded-3xl">
         <h2 class="text-base md:text-lg font-bold text-white mb-1"><i class="fa-solid fa-sliders mr-2 text-slate-400"></i>Pengaturan Sistem</h2>
         <p class="text-xs text-slate-400 mb-6">Perubahan akan memengaruhi status kehadiran & perhitungan gaji berikutnya.</p>
 
         <div class="flex flex-col gap-4">
-          <div class="flex flex-col gap-1">
-            <label class="text-[11px] font-semibold text-slate-400">Nama Sekolah / Instansi</label>
-            <input id="set-instansi" type="text" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
-          </div>
           <div class="flex flex-col gap-1">
             <label class="text-[11px] font-semibold text-slate-400">Jam Masuk Kerja (HH:mm)</label>
             <input id="set-jam-masuk" type="time" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
@@ -360,7 +434,7 @@
             <label class="text-[11px] font-semibold text-slate-400">Tarif Potongan per Menit Terlambat (Rp)</label>
             <input id="set-tarif" type="number" min="0" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none focus:border-blue-500">
           </div>
-          <button onclick="saveSettingsForm()" class="mt-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+          <button onclick="saveSettingsForm()" class="mt-2 btn-luxe text-white text-sm font-bold py-3 rounded-xl transition">
             <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Pengaturan
           </button>
         </div>
@@ -369,14 +443,14 @@
 
     <!-- ================== TAB 6: LAPORAN SAYA (GURU) ================== -->
     <section id="tab-laporansaya" class="tab-content hidden">
-      <div class="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="glass-card p-6 rounded-3xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
           <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-file-lines mr-2 text-purple-400"></i>Riwayat Absensi Saya</h2>
           <div class="flex flex-wrap items-center gap-2">
             <input type="date" id="my-tanggal-mulai" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
             <span class="text-xs text-slate-400">s/d</span>
             <input type="date" id="my-tanggal-akhir" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
-            <button onclick="loadMyReport()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
+            <button onclick="loadMyReport()" class="btn-luxe text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Tampilkan</button>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -398,12 +472,12 @@
 
     <!-- ================== TAB 7: SLIP GAJI SAYA (GURU) ================== -->
     <section id="tab-gajisaya" class="tab-content hidden">
-      <div class="max-w-xl bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+      <div class="max-w-xl glass-card p-6 rounded-3xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-4 mb-6 flex-wrap gap-4">
           <h2 class="text-base md:text-lg font-bold text-white"><i class="fa-solid fa-sack-dollar mr-2 text-amber-400"></i>Slip Gaji Saya</h2>
           <div class="flex items-center gap-2">
             <input type="month" id="my-periode-gaji" class="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white focus:outline-none">
-            <button onclick="loadMyPayrollSlip()" class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Lihat</button>
+            <button onclick="loadMyPayrollSlip()" class="btn-luxe text-white px-4 py-2 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-search mr-1"></i> Lihat</button>
           </div>
         </div>
         <div id="gajisaya-content" class="text-sm text-slate-400 text-center py-8">Pilih bulan lalu klik "Lihat".</div>
@@ -414,7 +488,7 @@
 
   <!-- ================== MODAL LOGIN ================== -->
   <div id="login-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6">
+    <div class="glass-card-solid rounded-3xl w-full max-w-sm p-6">
       <div class="flex justify-between items-center mb-5">
         <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-right-to-bracket mr-2 text-blue-400"></i>Login</h3>
         <button onclick="closeLoginModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -429,7 +503,7 @@
           <input id="login-password" type="password" autocomplete="current-password" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none" onkeydown="if(event.key==='Enter') doLogin();">
         </div>
         <p id="login-error" class="hidden text-xs text-rose-400 bg-rose-950/30 border border-rose-900/50 rounded-xl p-2.5"></p>
-        <button onclick="doLogin()" class="mt-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+        <button onclick="doLogin()" class="mt-1 btn-luxe text-white text-sm font-bold py-3 rounded-xl transition">
           <i class="fa-solid fa-right-to-bracket mr-1"></i> Masuk
         </button>
         <p class="text-[10px] text-slate-500 text-center mt-1">Akun dibuat oleh Admin. Guru/Staff baru bisa login setelah diberi username &amp; password oleh Admin di menu Data Guru.</p>
@@ -439,7 +513,7 @@
 
   <!-- ================== MODAL GANTI PASSWORD ================== -->
   <div id="password-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-sm p-6">
+    <div class="glass-card-solid rounded-3xl w-full max-w-sm p-6">
       <div class="flex justify-between items-center mb-5">
         <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-key mr-2 text-amber-400"></i>Ganti Password</h3>
         <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -453,7 +527,7 @@
           <label class="text-[11px] font-semibold text-slate-400">Password Baru (min. 6 karakter)</label>
           <input id="cp-new" type="password" class="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
         </div>
-        <button onclick="doChangePassword()" class="mt-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">
+        <button onclick="doChangePassword()" class="mt-1 btn-luxe text-white text-sm font-bold py-3 rounded-xl transition">
           <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Password Baru
         </button>
       </div>
@@ -462,7 +536,7 @@
 
   <!-- ================== MODAL TAMBAH/EDIT GURU ================== -->
   <div id="guru-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+    <div class="glass-card-solid rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6">
       <div class="flex justify-between items-center mb-5">
         <h3 id="modal-title" class="text-lg font-bold text-white">Tambah Guru</h3>
         <button onclick="closeGuruModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -508,8 +582,8 @@
       <!-- AKUN LOGIN GURU -->
       <div class="mt-5 p-4 bg-slate-950 border border-slate-800 rounded-2xl">
         <p class="text-xs font-bold text-slate-300 mb-1"><i class="fa-solid fa-user-lock mr-1 text-blue-400"></i>Akun Login (opsional)</p>
-        <p class="text-[10px] text-slate-500 mb-3">Isi supaya guru ini bisa login sendiri untuk melihat riwayat absensi & slip gajinya. Kosongkan jika tidak perlu.</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <p class="text-[10px] text-slate-500 mb-3">Isi supaya guru/pegawai ini bisa login sendiri. Kosongkan jika tidak perlu.</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div class="flex flex-col gap-1">
             <label class="text-[11px] font-semibold text-slate-400">Username</label>
             <input id="form-username" type="text" autocomplete="off" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
@@ -517,6 +591,13 @@
           <div class="flex flex-col gap-1">
             <label class="text-[11px] font-semibold text-slate-400">Password <span id="form-password-hint" class="text-slate-600 font-normal"></span></label>
             <input id="form-password" type="password" autocomplete="new-password" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="text-[11px] font-semibold text-slate-400">Role Akun</label>
+            <select id="form-role" class="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-sm text-white focus:outline-none">
+              <option value="Guru">Guru / Staff</option>
+              <option value="Admin">Admin</option>
+            </select>
           </div>
         </div>
       </div>
@@ -545,7 +626,7 @@
 
       <div class="flex gap-3 mt-6">
         <button onclick="closeGuruModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold py-3 rounded-xl transition">Batal</button>
-        <button onclick="saveGuru()" class="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold py-3 rounded-xl transition">Simpan Data</button>
+        <button onclick="saveGuru()" class="flex-1 btn-luxe text-white text-sm font-bold py-3 rounded-xl transition">Simpan Data</button>
       </div>
     </div>
   </div>
@@ -801,7 +882,6 @@
       if (res && res.success) {
         APP.instansi = res.instansi;
         document.getElementById('instansi-subtitle').innerText = APP.instansi + ' • Presensi Wajah Guru & Pegawai';
-        document.getElementById('set-instansi').value = APP.instansi;
       }
     }).catch(function () {});
   }
@@ -823,13 +903,13 @@
     APP.tarifPotongan = res.tarifPotongan;
 
     document.getElementById('instansi-subtitle').innerText = APP.instansi + ' • Presensi Wajah Guru & Pegawai';
-    document.getElementById('set-instansi').value = APP.instansi;
     document.getElementById('set-jam-masuk').value = APP.jamMasuk;
     document.getElementById('set-toleransi').value = APP.toleransi;
     document.getElementById('set-tarif').value = APP.tarifPotongan;
 
     renderMapelDatalist();
     renderGuruTable();
+    renderGuruFilterDropdowns();
     updateStats();
   }
 
@@ -848,7 +928,7 @@
     });
     if (btn) {
       btn.classList.add('active');
-      btn.style.boxShadow = 'inset 0 -2px 0 0 #10b981';
+      btn.style.boxShadow = 'inset 0 -2px 0 0 #d9b45a';
     }
     if (id !== 'absensi') {
       // hemat resource: hentikan loop scan saat pindah tab (kamera tetap bisa menyala jika user mau)
@@ -1054,11 +1134,14 @@
   function renderGuruTable() {
     var body = document.getElementById('guru-table-body');
     if (APP.teachers.length === 0) {
-      body.innerHTML = '<tr><td colspan="9" class="text-center py-8 text-slate-500">Belum ada data guru. Klik "Tambah Guru" untuk mulai.</td></tr>';
+      body.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-500">Belum ada data guru. Klik "Tambah Guru" untuk mulai.</td></tr>';
       return;
     }
     body.innerHTML = APP.teachers.map(function (g) {
       var hasFace = g.faceDescriptor && g.faceDescriptor.length > 10;
+      var akunBadge = g.accountUsername
+        ? ('<span class="text-[10px] font-bold px-2 py-1 rounded-full ' + (g.accountRole === 'Admin' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border border-blue-500/30') + '">' + escapeHtml(g.accountRole || 'Guru') + '</span>')
+        : '<span class="text-[10px] text-slate-600">-</span>';
       return '<tr class="hover:bg-slate-900/40">' +
         '<td class="px-4 py-3 font-mono">' + escapeHtml(g.nip) + '</td>' +
         '<td class="px-4 py-3 font-semibold text-white">' + escapeHtml(g.nama) + '</td>' +
@@ -1068,11 +1151,42 @@
         '<td class="px-4 py-3 text-right">' + formatRupiah(g.gajiPokok) + '</td>' +
         '<td class="px-4 py-3 text-right">' + formatRupiah(g.tunjangan) + '</td>' +
         '<td class="px-4 py-3 text-center">' + (hasFace ? '<span class="text-emerald-400"><i class="fa-solid fa-circle-check"></i></span>' : '<span class="text-slate-600"><i class="fa-solid fa-circle-xmark"></i></span>') + '</td>' +
+        '<td class="px-4 py-3 text-center">' + akunBadge + '</td>' +
         '<td class="px-4 py-3 text-center">' +
           '<button onclick="openEditModal(\'' + escapeJs(g.nip) + '\')" class="text-blue-400 hover:text-blue-300 mr-3"><i class="fa-solid fa-pen"></i></button>' +
           '<button onclick="confirmDeleteGuru(\'' + escapeJs(g.nip) + '\')" class="text-rose-400 hover:text-rose-300"><i class="fa-solid fa-trash"></i></button>' +
         '</td></tr>';
     }).join('');
+  }
+
+  // Isi dropdown "Pilih Guru" di tab Perhitungan Gaji & Laporan, sambil
+  // menjaga pilihan yang sedang aktif kalau memungkinkan (tidak reset saat data reload).
+  function renderGuruFilterDropdowns() {
+    var options = '<option value="">Semua Guru</option>' + APP.teachers.map(function (g) {
+      return '<option value="' + escapeHtml(g.nip) + '">' + escapeHtml(g.nama) + '</option>';
+    }).join('');
+
+    ['filter-gaji-guru', 'filter-laporan-guru'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var current = el.value;
+      el.innerHTML = options;
+      if (current && APP.teachers.some(function (g) { return g.nip === current; })) {
+        el.value = current;
+      }
+    });
+  }
+
+  function onFilterGajiChange() {
+    if (APP.payrollCache && APP.payrollCache.data && APP.payrollCache.data.length) {
+      renderPayrollTable(APP.payrollCache);
+    }
+  }
+
+  function onFilterLaporanChange() {
+    if (APP.laporanCache && APP.laporanCache.data && APP.laporanCache.data.length) {
+      renderLaporanTable(APP.laporanCache);
+    }
   }
 
   // ===================== MODAL TAMBAH/EDIT =====================
@@ -1089,8 +1203,10 @@
     document.getElementById('form-gaji-pokok').value = '';
     document.getElementById('form-tunjangan').value = '';
     document.getElementById('form-username').value = '';
+    document.getElementById('form-username').placeholder = '';
     document.getElementById('form-password').value = '';
     document.getElementById('form-password-hint').innerText = '';
+    document.getElementById('form-role').value = 'Guru';
     updateFaceBadge(false);
     document.getElementById('guru-modal').classList.remove('hidden');
   }
@@ -1111,8 +1227,10 @@
     document.getElementById('form-gaji-pokok').value = g.gajiPokok || 0;
     document.getElementById('form-tunjangan').value = g.tunjangan || 0;
     document.getElementById('form-username').value = '';
+    document.getElementById('form-username').placeholder = g.accountUsername ? ('Saat ini: ' + g.accountUsername) : '';
     document.getElementById('form-password').value = '';
-    document.getElementById('form-password-hint').innerText = '(kosongkan = tidak diubah)';
+    document.getElementById('form-password-hint').innerText = g.accountUsername ? '(kosongkan = tidak diubah)' : '';
+    document.getElementById('form-role').value = g.accountRole || 'Guru';
     updateFaceBadge(!!APP.currentEnrollDescriptor);
     document.getElementById('guru-modal').classList.remove('hidden');
   }
@@ -1144,6 +1262,7 @@
     var descriptorStr = APP.currentEnrollDescriptor ? JSON.stringify(APP.currentEnrollDescriptor) : '';
     var username = document.getElementById('form-username').value.trim();
     var password = document.getElementById('form-password').value;
+    var role = document.getElementById('form-role').value;
 
     if (!nip || !nama || !jabatan) {
       Swal.fire('Data Belum Lengkap', 'NIP, Nama, dan Jabatan wajib diisi.', 'warning');
@@ -1157,10 +1276,10 @@
     Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); }, allowOutsideClick: false });
 
     if (APP.editingNip === null) {
-      callApi('addGuru', { nip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password })
+      callApi('addGuru', { nip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password, role: role })
         .then(onSaveGuruResult).catch(onServerError);
     } else {
-      callApi('editGuru', { oldNip: APP.editingNip, newNip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password })
+      callApi('editGuru', { oldNip: APP.editingNip, newNip: nip, nama: nama, jabatan: jabatan, mapel: mapel, status: status, gajiPokok: gajiPokok, tunjangan: tunjangan, faceDescriptor: descriptorStr, username: username, password: password, role: role })
         .then(onSaveGuruResult).catch(onServerError);
     }
   }
@@ -1262,11 +1381,18 @@
 
   function renderPayrollTable(res) {
     var body = document.getElementById('gaji-table-body');
-    if (!res.data || res.data.length === 0) {
-      body.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-500">Tidak ada data guru / absensi pada periode ini.</td></tr>';
+    var selectedNip = document.getElementById('filter-gaji-guru').value;
+    var rows = res.data || [];
+    if (selectedNip) {
+      rows = rows.filter(function (row) { return String(row[1]) === String(selectedNip); });
+    }
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-500">' +
+        (selectedNip ? 'Tidak ada data gaji untuk guru terpilih pada periode ini.' : 'Tidak ada data guru / absensi pada periode ini.') +
+        '</td></tr>';
       return;
     }
-    body.innerHTML = res.data.map(function (row) {
+    body.innerHTML = rows.map(function (row) {
       // [periode, nip, nama, jabatan, totalHadir, totalTerlambat, totalMenitTerlambat, gajiPokok, tunjangan, potongan, gajiBersih, tglHitung]
       return '<tr class="hover:bg-slate-900/40">' +
         '<td class="px-3 py-3 font-mono">' + escapeHtml(row[1]) + '</td>' +
@@ -1283,24 +1409,39 @@
     }).join('');
   }
 
+  // Ambil baris hasil hitung gaji sesuai dropdown "Pilih Guru" yang aktif saat ini.
+  function getFilteredPayrollRows() {
+    var selectedNip = document.getElementById('filter-gaji-guru').value;
+    var rows = (APP.payrollCache && APP.payrollCache.data) || [];
+    if (selectedNip) rows = rows.filter(function (row) { return String(row[1]) === String(selectedNip); });
+    return { rows: rows, selectedNip: selectedNip };
+  }
+
   function exportPayrollExcel() {
     if (!APP.payrollCache || !APP.payrollCache.data || APP.payrollCache.data.length === 0) {
       Swal.fire('Belum Ada Data', 'Hitung gaji terlebih dahulu.', 'info'); return;
     }
-    var ws = XLSX.utils.aoa_to_sheet([APP.payrollCache.headers].concat(APP.payrollCache.data));
+    var f = getFilteredPayrollRows();
+    if (f.rows.length === 0) { Swal.fire('Tidak Ada Data', 'Guru terpilih tidak memiliki data gaji pada periode ini.', 'info'); return; }
+    var ws = XLSX.utils.aoa_to_sheet([APP.payrollCache.headers].concat(f.rows));
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Gaji');
-    XLSX.writeFile(wb, 'Perhitungan_Gaji_Guru.xlsx');
+    var fileName = f.selectedNip ? ('Gaji_' + f.rows[0][2].replace(/\s+/g, '_') + '.xlsx') : 'Perhitungan_Gaji_Guru.xlsx';
+    XLSX.writeFile(wb, fileName);
   }
 
   function exportPayrollPDF() {
     if (!APP.payrollCache || !APP.payrollCache.data || APP.payrollCache.data.length === 0) {
       Swal.fire('Belum Ada Data', 'Hitung gaji terlebih dahulu.', 'info'); return;
     }
+    var f = getFilteredPayrollRows();
+    if (f.rows.length === 0) { Swal.fire('Tidak Ada Data', 'Guru terpilih tidak memiliki data gaji pada periode ini.', 'info'); return; }
     var docPdf = new jspdf.jsPDF({ orientation: 'landscape' });
-    docPdf.text('Laporan Perhitungan Gaji Guru', 14, 12);
-    docPdf.autoTable({ head: [APP.payrollCache.headers], body: APP.payrollCache.data, startY: 18, styles: { fontSize: 7 } });
-    docPdf.save('Perhitungan_Gaji_Guru.pdf');
+    var judul = f.selectedNip ? ('Slip Gaji - ' + f.rows[0][2]) : 'Laporan Perhitungan Gaji Guru';
+    docPdf.text(judul, 14, 12);
+    docPdf.autoTable({ head: [APP.payrollCache.headers], body: f.rows, startY: 18, styles: { fontSize: 7 } });
+    var fileName = f.selectedNip ? ('Gaji_' + f.rows[0][2].replace(/\s+/g, '_') + '.pdf') : 'Perhitungan_Gaji_Guru.pdf';
+    docPdf.save(fileName);
   }
 
   // ===================== LAPORAN ABSENSI =====================
@@ -1317,11 +1458,19 @@
 
   function renderLaporanTable(res) {
     var body = document.getElementById('laporan-table-body');
-    if (!res.data || res.data.length === 0) {
-      body.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">Tidak ada data pada rentang tanggal ini.</td></tr>';
+    var selectedNip = document.getElementById('filter-laporan-guru').value;
+    var rows = res.data || [];
+    if (selectedNip) {
+      rows = rows.filter(function (row) { return String(row[1]) === String(selectedNip); });
+    }
+    if (rows.length === 0) {
+      body.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-500">' +
+        (selectedNip ? 'Tidak ada data untuk guru terpilih pada rentang tanggal ini.' : 'Tidak ada data pada rentang tanggal ini.') +
+        '</td></tr>';
       return;
     }
-    body.innerHTML = res.data.map(function (row) {
+
+    function rowHtml(row) {
       var isLate = row[4] === 'Terlambat';
       return '<tr class="hover:bg-slate-900/40">' +
         '<td class="px-3 py-3">' + escapeHtml(row[0]) + '</td>' +
@@ -1331,27 +1480,72 @@
         '<td class="px-3 py-3">' + (isLate ? '<span class="text-amber-400 font-bold">Terlambat</span>' : '<span class="text-emerald-400 font-bold">Hadir</span>') + '</td>' +
         '<td class="px-3 py-3 text-center">' + (row[5] || 0) + '</td>' +
       '</tr>';
+    }
+
+    if (selectedNip) {
+      // Satu guru saja terpilih: tampilkan flat, tanpa perlu dikelompokkan lagi.
+      body.innerHTML = rows.map(rowHtml).join('');
+      return;
+    }
+
+    // "Semua Guru": kelompokkan baris per nama guru dengan sub-header, supaya
+    // laporan tidak tercampur antar guru dan lebih rapi dibaca / dipindai.
+    var groups = [];
+    var indexByNip = {};
+    rows.forEach(function (row) {
+      var nip = String(row[1]);
+      if (!(nip in indexByNip)) {
+        indexByNip[nip] = groups.length;
+        groups.push({ nip: nip, nama: row[2], jabatan: row[3], rows: [] });
+      }
+      groups[indexByNip[nip]].rows.push(row);
+    });
+
+    body.innerHTML = groups.map(function (grp) {
+      var header = '<tr class="bg-slate-900/70">' +
+        '<td colspan="6" class="px-3 py-2 text-xs font-bold tracking-wide text-amber-300">' +
+          '<i class="fa-solid fa-user-tie mr-2"></i>' + escapeHtml(grp.nama) + ' <span class="text-slate-500 font-normal">• ' + escapeHtml(grp.jabatan) + ' • ' + grp.rows.length + ' catatan</span>' +
+        '</td></tr>';
+      return header + grp.rows.map(rowHtml).join('');
     }).join('');
+  }
+
+  // Ambil baris laporan sesuai dropdown "Pilih Guru" yang aktif saat ini.
+  function getFilteredLaporanRows() {
+    var selectedNip = document.getElementById('filter-laporan-guru').value;
+    var rows = (APP.laporanCache && APP.laporanCache.data) || [];
+    if (selectedNip) rows = rows.filter(function (row) { return String(row[1]) === String(selectedNip); });
+    return { rows: rows, selectedNip: selectedNip };
   }
 
   function exportLaporanExcel() {
     if (!APP.laporanCache || !APP.laporanCache.data || APP.laporanCache.data.length === 0) {
       Swal.fire('Belum Ada Data', 'Tampilkan laporan terlebih dahulu.', 'info'); return;
     }
-    var ws = XLSX.utils.aoa_to_sheet([APP.laporanCache.headers].concat(APP.laporanCache.data));
+    var f = getFilteredLaporanRows();
+    if (f.rows.length === 0) { Swal.fire('Tidak Ada Data', 'Guru terpilih tidak memiliki data pada rentang tanggal ini.', 'info'); return; }
+    // Urutkan per nama guru supaya rapi & tidak bercampur saat "Semua Guru" dipilih.
+    var exportRows = f.selectedNip ? f.rows : f.rows.slice().sort(function (a, b) { return String(a[2]).localeCompare(String(b[2])) || String(a[0]).localeCompare(String(b[0])); });
+    var ws = XLSX.utils.aoa_to_sheet([APP.laporanCache.headers].concat(exportRows));
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Absensi Guru');
-    XLSX.writeFile(wb, 'Laporan_Absensi_Guru.xlsx');
+    var fileName = f.selectedNip ? ('Laporan_Absensi_' + f.rows[0][2].replace(/\s+/g, '_') + '.xlsx') : 'Laporan_Absensi_Guru.xlsx';
+    XLSX.writeFile(wb, fileName);
   }
 
   function exportLaporanPDF() {
     if (!APP.laporanCache || !APP.laporanCache.data || APP.laporanCache.data.length === 0) {
       Swal.fire('Belum Ada Data', 'Tampilkan laporan terlebih dahulu.', 'info'); return;
     }
+    var f = getFilteredLaporanRows();
+    if (f.rows.length === 0) { Swal.fire('Tidak Ada Data', 'Guru terpilih tidak memiliki data pada rentang tanggal ini.', 'info'); return; }
+    var exportRows = f.selectedNip ? f.rows : f.rows.slice().sort(function (a, b) { return String(a[2]).localeCompare(String(b[2])) || String(a[0]).localeCompare(String(b[0])); });
     var docPdf = new jspdf.jsPDF();
-    docPdf.text('Laporan Absensi Guru', 14, 12);
-    docPdf.autoTable({ head: [APP.laporanCache.headers], body: APP.laporanCache.data, startY: 18, styles: { fontSize: 8 } });
-    docPdf.save('Laporan_Absensi_Guru.pdf');
+    var judul = f.selectedNip ? ('Laporan Absensi - ' + f.rows[0][2]) : 'Laporan Absensi Guru';
+    docPdf.text(judul, 14, 12);
+    docPdf.autoTable({ head: [APP.laporanCache.headers], body: exportRows, startY: 18, styles: { fontSize: 8 } });
+    var fileName = f.selectedNip ? ('Laporan_Absensi_' + f.rows[0][2].replace(/\s+/g, '_') + '.pdf') : 'Laporan_Absensi_Guru.pdf';
+    docPdf.save(fileName);
   }
 
   // ===================== LAPORAN SAYA (GURU) =====================
@@ -1408,17 +1602,16 @@
 
   // ===================== PENGATURAN =====================
   function saveSettingsForm() {
-    var instansi = document.getElementById('set-instansi').value.trim();
     var jamMasuk = document.getElementById('set-jam-masuk').value;
     var toleransi = Number(document.getElementById('set-toleransi').value) || 0;
     var tarif = Number(document.getElementById('set-tarif').value) || 0;
 
-    if (!instansi || !jamMasuk) {
-      Swal.fire('Data Belum Lengkap', 'Nama instansi dan jam masuk wajib diisi.', 'warning'); return;
+    if (!jamMasuk) {
+      Swal.fire('Data Belum Lengkap', 'Jam masuk kerja wajib diisi.', 'warning'); return;
     }
 
     Swal.fire({ title: 'Menyimpan...', didOpen: function(){ Swal.showLoading(); }, allowOutsideClick: false });
-    callApi('saveSettings', { instansi: instansi, jamMasuk: jamMasuk, toleransi: toleransi, tarifPotongan: tarif }).then(function (res) {
+    callApi('saveSettings', { jamMasuk: jamMasuk, toleransi: toleransi, tarifPotongan: tarif }).then(function (res) {
       Swal.close();
       if (res && res.success) {
         Swal.fire({ icon: 'success', title: 'Tersimpan', text: res.message, timer: 1500, showConfirmButton: false });
