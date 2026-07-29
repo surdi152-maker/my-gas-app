@@ -7,13 +7,11 @@
 "id": "/my-gas-app/?source=pwa",
 "display": "standalone",
 "display_override": [
-"window-controls-overlay",
-"tabbed",
 "standalone",
-"minimal-ui"
+"fullscreen"
 ],
-"orientation": "any",
-"background_color": "#ffffff",
+"orientation": "portrait-primary",
+"background_color": "#0f172a",
 "theme_color": "#4f46e5",
 "lang": "id-ID",
 "dir": "ltr",
@@ -31,70 +29,7 @@
 "url": "url"
 }
 },
-"edge_side_panel": {
-"preferred_width": 400
-},
-"widgets": [
-{
-"name": "Quick Absensi Guru",
-"short_name": "Absensi",
-"description": "Widget pemindai absensi cepat dan info kehadiran harian",
-"tag": "absensi-guru-widget",
-"template": "widget-template",
-"ms_ac_template": "widget-template.json",
-"data": "widget-data.json",
-"type": "text/html",
-"screenshots": [
-{
-"src": "https://placehold.co/400x300/4f46e5/ffffff.png?text=Widget+Absensi",
-"sizes": "400x300",
-"label": "Tampilan Widget Absensi Guru"
-}
-],
-"icons": [
-{
-"src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
-"sizes": "192x192"
-}
-]
-}
-],
 "prefer_related_applications": false,
-"related_applications": [
-{
-"platform": "play",
-"url": "https://play.google.com/store/apps/details?id=com.absensiguru.app",
-"id": "com.absensiguru.app"
-}
-],
-"iarc_rating_id": "e84b2320-80ef-482d-8888-d21531c3a647",
-"scope_extensions": [
-{
-"origin": "surdi152-maker.github.io"
-}
-],
-"protocol_handlers": [
-{
-"protocol": "web+absensiguru",
-"url": "/my-gas-app/?type=%s"
-}
-],
-"launch_handler": {
-"client_mode": [
-"navigate-existing",
-"auto"
-]
-},
-"file_handlers": [
-{
-"action": "/my-gas-app/",
-"accept": {
-"text/csv": [
-".csv"
-]
-}
-}
-],
 "icons": [
 {
 "src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
@@ -119,22 +54,6 @@
 "sizes": "512x512",
 "type": "image/png",
 "purpose": "maskable"
-}
-],
-"screenshots": [
-{
-"src": "https://placehold.co/1280x720/4f46e5/ffffff.png?text=Absensi+Guru+Desktop",
-"sizes": "1280x720",
-"type": "image/png",
-"form_factor": "wide",
-"label": "Tampilan Desktop Aplikasi Absensi Guru"
-},
-{
-"src": "https://placehold.co/540x960/4f46e5/ffffff.png?text=Absensi+Guru+Mobile",
-"sizes": "540x960",
-"type": "image/png",
-"form_factor": "narrow",
-"label": "Tampilan Mobile Aplikasi Absensi Guru"
 }
 ],
 "shortcuts": [
