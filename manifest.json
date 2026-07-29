@@ -12,6 +12,10 @@
     "window-controls-overlay",
     "minimal-ui"
   ],
+  "tab_strip": {
+    "home_tab": "auto",
+    "new_tab_button": "auto"
+  },
   "orientation": "portrait-primary",
   "background_color": "#0f172a",
   "theme_color": "#4f46e5",
@@ -87,6 +91,23 @@
     }
   ],
   "prefer_related_applications": false,
+
+  "screenshots": [
+    {
+      "src": "https://placehold.co/1080x1920/4f46e5/ffffff.png?text=Absensi+Guru+Mobile",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Tampilan Mobile Absensi Wajah"
+    },
+    {
+      "src": "https://placehold.co/1920x1080/4f46e5/ffffff.png?text=Absensi+Guru+Desktop",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Tampilan Desktop Laporan & Rekap Gaji"
+    }
+  ],
 
   "icons": [
     { "src": "icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
