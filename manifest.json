@@ -1,134 +1,120 @@
 {
-"name": "Sistem Absensi Guru & Pegawai",
-"short_name": "AbsensiGuru",
-"description": "Aplikasi Absensi Guru dan Pegawai Berbasis Web App dengan Pengenalan Wajah (Face Recognition)",
-"start_url": "/my-gas-app/",
-"scope": "/my-gas-app/",
-"id": "/my-gas-app/?source=pwa",
-"display": "standalone",
-"display_override": [
-"standalone",
-"tabbed",
-"window-controls-overlay",
-"minimal-ui"
-],
-"orientation": "portrait-primary",
-"background_color": "#0f172a",
-"theme_color": "#4f46e5",
-"lang": "id-ID",
-"dir": "ltr",
-"iarc_rating_id": "e84b0754-2b23-444a-a9d8-5b487d605001",
-"categories": [
-"education",
-"productivity",
-"utilities"
-],
-"share_target": {
-"action": "/my-gas-app/",
-"method": "GET",
-"params": {
-"title": "title",
-"text": "text",
-"url": "url"
-}
-},
-"file_handlers": [
-{
-"action": "/my-gas-app/",
-"accept": {
-"text/csv": [".csv"]
-}
-}
-],
-"widgets": [
-{
-"name": "Absensi Quick Scan",
-"short_name": "Absensi",
-"description": "Widget untuk membuka kamera absensi dengan cepat",
-"tag": "absensi-widget",
-"template": "widget-template",
-"ms_ac_template": "widgets/absensi.json",
-"data": "widgets/data.json",
-"type": "application/json",
-"screenshots": [
-{
-"src": "https://placehold.co/400x200/4f46e5/ffffff.png?text=Widget+Absensi",
-"sizes": "400x200",
-"label": "Widget Absensi"
-}
-]
-}
-],
-"edge_side_panel": {
-"preferred_width": 400
-},
-"scope_extensions": [
-{
-"origin": "https://surdi152-maker.github.io"
-}
-],
-"related_applications": [
-{
-"platform": "play",
-"url": "https://play.google.com/store/apps/details?id=io.github.surdi152_maker.twa",
-"id": "io.github.surdi152_maker.twa"
-}
-],
-"prefer_related_applications": false,
-"icons": [
-{
-"src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
-"sizes": "192x192",
-"type": "image/png",
-"purpose": "any"
-},
-{
-"src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
-"sizes": "192x192",
-"type": "image/png",
-"purpose": "maskable"
-},
-{
-"src": "https://placehold.co/512x512/4f46e5/ffffff.png?text=Absensi+Guru",
-"sizes": "512x512",
-"type": "image/png",
-"purpose": "any"
-},
-{
-"src": "https://placehold.co/512x512/4f46e5/ffffff.png?text=Absensi+Guru",
-"sizes": "512x512",
-"type": "image/png",
-"purpose": "maskable"
-}
-],
-"screenshots": [
-{
-"src": "https://placehold.co/1080x1920/4f46e5/ffffff.png?text=Absensi+Guru+Mobile",
-"sizes": "1080x1920",
-"type": "image/png",
-"form_factor": "narrow",
-"label": "Tampilan Mobile Absensi Wajah"
-},
-{
-"src": "https://placehold.co/1920x1080/4f46e5/ffffff.png?text=Absensi+Guru+Desktop",
-"sizes": "1920x1080",
-"type": "image/png",
-"form_factor": "wide",
-"label": "Tampilan Desktop Laporan & Rekap Gaji"
-}
-],
-"shortcuts": [
-{
-"name": "Scan Wajah Absensi",
-"short_name": "Absensi",
-"description": "Buka pemindai wajah absensi",
-"url": "/my-gas-app/"
-},
-{
-"name": "Data Guru",
-"short_name": "Guru",
-"description": "Kelola data guru dan biometrik",
-"url": "/my-gas-app/"
-}
-]
+  "name": "Sistem Absensi Guru & Pegawai",
+  "short_name": "AbsensiGuru",
+  "description": "Aplikasi Absensi Guru dan Pegawai Berbasis Web App dengan Pengenalan Wajah (Face Recognition)",
+  "start_url": "/my-gas-app/",
+  "scope": "/my-gas-app/",
+  "id": "/my-gas-app/?source=pwa",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "tabbed",
+    "window-controls-overlay",
+    "minimal-ui"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "lang": "id-ID",
+  "dir": "ltr",
+  "iarc_rating_id": "e84b0754-2b23-444a-a9d8-5b487d605001",
+  "categories": [
+    "education",
+    "productivity",
+    "utilities"
+  ],
+
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+absensiguru",
+      "url": "/my-gas-app/?handler=%s"
+    }
+  ],
+
+  "share_target": {
+    "action": "/my-gas-app/",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "file_handlers": [
+    {
+      "action": "/my-gas-app/",
+      "accept": {
+        "text/csv": [".csv"]
+      }
+    }
+  ],
+  "widgets": [
+    {
+      "name": "Absensi Quick Scan",
+      "short_name": "Absensi",
+      "description": "Widget untuk membuka kamera absensi dengan cepat",
+      "tag": "absensi-widget",
+      "template": "widget-template",
+      "ms_ac_template": "widgets/absensi.json",
+      "data": "widgets/data.json",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "icons/icon-512.png",
+          "sizes": "512x512",
+          "label": "Widget Absensi"
+        }
+      ]
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "scope_extensions": [
+    {
+      "origin": "https://surdi152-maker.github.io"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=io.github.surdi152_maker.twa",
+      "id": "io.github.surdi152_maker.twa"
+    }
+  ],
+  "prefer_related_applications": false,
+
+  "icons": [
+    { "src": "icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Scan Wajah Absensi",
+      "short_name": "Absensi",
+      "description": "Buka pemindai wajah absensi",
+      "url": "/my-gas-app/"
+    },
+    {
+      "name": "Data Guru",
+      "short_name": "Guru",
+      "description": "Kelola data guru dan biometrik",
+      "url": "/my-gas-app/"
+    }
+  ]
 }
