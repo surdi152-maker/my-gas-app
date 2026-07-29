@@ -4,16 +4,46 @@
 "description": "Aplikasi Absensi Guru dan Pegawai Berbasis Web App dengan Pengenalan Wajah (Face Recognition)",
 "start_url": "/my-gas-app/",
 "scope": "/my-gas-app/",
-"id": "absensi-guru-app-v1",
+"id": "/my-gas-app/?source=pwa",
 "display": "standalone",
-"display_override": ["standalone", "minimal-ui"],
+"display_override": [
+"window-controls-overlay",
+"standalone",
+"minimal-ui"
+],
 "orientation": "any",
 "background_color": "#ffffff",
 "theme_color": "#4f46e5",
 "lang": "id-ID",
 "dir": "ltr",
-"categories": ["education", "productivity", "utilities"],
+"categories": [
+"education",
+"productivity", "utilities"
+],
 "prefer_related_applications": false,
+"related_applications": [],
+"iarc_rating_id": "",
+"scope_extensions": [
+{
+"origin": "surdi152-maker.github.io"
+}
+],
+"launch_handler": {
+"client_mode": [
+"navigate-existing",
+"auto"
+]
+},
+"file_handlers": [
+{
+"action": "/my-gas-app/",
+"accept": {
+"text/csv": [
+".csv"
+]
+}
+}
+],
 "icons": [
 {
 "src": "https://placehold.co/192x192/4f46e5/ffffff.png?text=AG",
