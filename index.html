@@ -1638,9 +1638,30 @@
   // ===================== PWA: SERVICE WORKER & INSTALL PROMPT =====================
   function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
-    // ./sw.js (relatif terhadap lokasi Index.html saat di-hosting, mis. Netlify/GitHub Pages).
-    navigator.serviceWorker.register('sw.js').catch(function (err) {
+    // ./sw.js (relatif terhadap lokasi Index.html saat di-hosting, mis. GitHub Pages).
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      reg.update(); // cek update setiap kali halaman dibuka, jangan andalkan interval bawaan browser
+
+      reg.addEventListener('updatefound', function () {
+        var newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', function () {
+          // Versi baru sudah siap DAN sebelumnya sudah ada SW aktif -> ini update, bukan install pertama.
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            window.location.reload();
+          }
+        });
+      });
+    }).catch(function (err) {
       console.warn('Service worker gagal didaftarkan (aplikasi tetap berjalan normal tanpa mode offline):', err);
+    });
+
+    // Reload sekali saat SW baru resmi ambil alih kendali halaman.
+    var _swRefreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function () {
+      if (_swRefreshing) return;
+      _swRefreshing = true;
+      window.location.reload();
     });
   }
 
