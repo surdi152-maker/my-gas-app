@@ -933,6 +933,47 @@
     if (id !== 'absensi') {
       // hemat resource: hentikan loop scan saat pindah tab (kamera tetap bisa menyala jika user mau)
     }
+
+    // ===== AUTO-LOAD: tabel langsung tampil begitu tab dibuka, tanpa perlu klik "Tampilkan" =====
+    autoLoadTabData(id);
+  }
+
+  // Mengisi default periode/rentang tanggal (mengikuti bulan berjalan) bila
+  // input masih kosong, lalu langsung memanggil fungsi pemuatan data yang
+  // sesuai untuk tab terkait supaya tabel otomatis terisi saat tab dibuka.
+  function autoLoadTabData(id) {
+    var pad = function (n) { return String(n).padStart(2, '0'); };
+    var today = new Date();
+    var thisPeriode = today.getFullYear() + '-' + pad(today.getMonth() + 1);
+    var firstDay = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-01';
+    var lastDayObj = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    var lastDay = lastDayObj.getFullYear() + '-' + pad(lastDayObj.getMonth() + 1) + '-' + pad(lastDayObj.getDate());
+
+    if (id === 'gaji') {
+      var elPeriode = document.getElementById('input-periode-gaji');
+      if (elPeriode && !elPeriode.value) elPeriode.value = thisPeriode;
+      hitungGaji();
+    } else if (id === 'laporan') {
+      var elStart = document.getElementById('input-tanggal-mulai');
+      var elEnd = document.getElementById('input-tanggal-akhir');
+      if (elStart && !elStart.value) elStart.value = firstDay;
+      if (elEnd && !elEnd.value) elEnd.value = lastDay;
+      loadLaporan();
+    } else if (id === 'laporansaya') {
+      var elMyStart = document.getElementById('my-tanggal-mulai');
+      var elMyEnd = document.getElementById('my-tanggal-akhir');
+      if (elMyStart && !elMyStart.value) elMyStart.value = firstDay;
+      if (elMyEnd && !elMyEnd.value) elMyEnd.value = lastDay;
+      loadMyReport();
+    } else if (id === 'gajisaya') {
+      var elMyPeriode = document.getElementById('my-periode-gaji');
+      if (elMyPeriode && !elMyPeriode.value) elMyPeriode.value = thisPeriode;
+      loadMyPayrollSlip();
+    } else if (id === 'datamaster') {
+      // tab Data Guru: ambil ulang data terbaru dari server tiap kali tab dibuka,
+      // supaya daftar guru selalu tampil ter-update tanpa perlu aksi manual.
+      loadInitialData();
+    }
   }
 
   // ===================== FACE MODELS =====================
