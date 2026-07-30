@@ -5,7 +5,7 @@
 // =====================================================================================
 
 // Naikkan angka ini kalau suatu saat mengganti daftar APP_SHELL di bawah
-// (mis. menambah/menghapus file penting). Untuk update konten biasa (isi Index.html,
+// (mis. menambah/menghapus file penting). Untuk update konten biasa (isi index.html,
 // logika JS, dsb) TIDAK perlu diubah - network-first di bawah sudah otomatis ambil
 // versi terbaru tiap kali online.
 const CACHE_VERSION = 'v1';
@@ -15,7 +15,7 @@ const CACHE_NAME = 'absensi-guru-' + CACHE_VERSION;
 // (model face-api.js dari CDN) supaya proses install SW tetap ringan & cepat.
 const APP_SHELL = [
   './',
-  './Index.html',
+  './index.html',
   './manifest.json'
 ];
 
@@ -62,7 +62,7 @@ self.addEventListener('fetch', function (event) {
       }).catch(function () {
         // Offline -> fallback ke versi terakhir yang tersimpan di cache.
         return caches.match(req).then(function (cached) {
-          return cached || caches.match('./Index.html');
+          return cached || caches.match('./index.html');
         });
       })
     );
