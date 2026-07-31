@@ -79,6 +79,12 @@
       animation: scan 2.2s linear infinite; z-index: 20;
     }
     .tab-content.hidden { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #slip-gaji-modal, #slip-gaji-modal * { visibility: visible; }
+      #slip-gaji-modal { position: absolute; inset: 0; background: #fff; padding: 0; }
+      #slip-gaji-modal .no-print { display: none !important; }
+    }
 
     /* ===== Header & branding mewah ===== */
     .app-header {
@@ -368,10 +374,11 @@
                 <th class="px-3 py-3 text-right">Tunjangan</th>
                 <th class="px-3 py-3 text-right text-rose-400">Potongan</th>
                 <th class="px-3 py-3 text-right text-emerald-400">Gaji Bersih</th>
+                <th class="px-3 py-3 text-center">Slip Gaji</th>
               </tr>
             </thead>
             <tbody id="gaji-table-body" class="divide-y divide-slate-800/80">
-              <tr><td colspan="10" class="text-center py-8 text-slate-500">Pilih periode lalu klik "Hitung Gaji"</td></tr>
+              <tr><td colspan="11" class="text-center py-8 text-slate-500">Pilih periode lalu klik "Hitung Gaji"</td></tr>
             </tbody>
           </table>
         </div>
@@ -485,6 +492,21 @@
     </section>
 
   </main>
+
+  <!-- ================== MODAL SLIP GAJI (CETAK/DOWNLOAD - ADMIN ONLY) ================== -->
+  <div id="slip-gaji-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="glass-card-solid rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-5">
+      <div class="flex justify-between items-center mb-4 no-print">
+        <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-file-invoice-dollar mr-2 text-amber-400"></i>Pratinjau Slip Gaji</h3>
+        <button onclick="closeSlipGajiModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+      </div>
+      <div id="slip-gaji-modal-content"></div>
+      <div class="flex gap-2 mt-5 no-print">
+        <button onclick="downloadCurrentSlipGajiPDF()" class="flex-1 bg-rose-700 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> Download PDF</button>
+        <button onclick="window.print()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-print mr-1"></i> Cetak</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ================== MODAL LOGIN ================== -->
   <div id="login-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -1428,7 +1450,7 @@
       rows = rows.filter(function (row) { return String(row[1]) === String(selectedNip); });
     }
     if (rows.length === 0) {
-      body.innerHTML = '<tr><td colspan="10" class="text-center py-8 text-slate-500">' +
+      body.innerHTML = '<tr><td colspan="11" class="text-center py-8 text-slate-500">' +
         (selectedNip ? 'Tidak ada data gaji untuk guru terpilih pada periode ini.' : 'Tidak ada data guru / absensi pada periode ini.') +
         '</td></tr>';
       return;
@@ -1446,6 +1468,7 @@
         '<td class="px-3 py-3 text-right">' + formatRupiah(row[8]) + '</td>' +
         '<td class="px-3 py-3 text-right text-rose-400">' + formatRupiah(row[9]) + '</td>' +
         '<td class="px-3 py-3 text-right text-emerald-400 font-bold">' + formatRupiah(row[10]) + '</td>' +
+        '<td class="px-3 py-3 text-center"><button onclick="openSlipGajiModal(\'' + escapeJs(row[1]) + '\')" class="text-amber-400 hover:text-amber-300" title="Cetak / Download Slip Gaji"><i class="fa-solid fa-file-invoice-dollar text-sm"></i></button></td>' +
       '</tr>';
     }).join('');
   }
@@ -1625,17 +1648,8 @@
         return;
       }
       var row = res.data; // [periode, nip, nama, jabatan, hadir, terlambat, menitTerlambat, gajiPokok, tunjangan, potongan, gajiBersih, tglHitung]
-      box.innerHTML =
-        '<div class="grid grid-cols-2 gap-3 text-left">' +
-          '<div class="col-span-2 bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Nama</p><p class="text-sm font-bold text-white">' + escapeHtml(row[2]) + ' <span class="text-slate-500 font-normal">(' + escapeHtml(row[3]) + ')</span></p></div>' +
-          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Total Hadir</p><p class="text-lg font-bold text-white">' + row[4] + ' hari</p></div>' +
-          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Total Terlambat</p><p class="text-lg font-bold text-amber-400">' + row[5] + ' hari (' + row[6] + ' menit)</p></div>' +
-          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Gaji Pokok</p><p class="text-sm font-bold text-white">' + formatRupiah(row[7]) + '</p></div>' +
-          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Tunjangan</p><p class="text-sm font-bold text-white">' + formatRupiah(row[8]) + '</p></div>' +
-          '<div class="bg-slate-950 border border-slate-800 rounded-2xl p-4"><p class="text-[10px] text-slate-500 uppercase font-bold">Potongan Keterlambatan</p><p class="text-sm font-bold text-rose-400">- ' + formatRupiah(row[9]) + '</p></div>' +
-          '<div class="bg-emerald-950/30 border border-emerald-800/60 rounded-2xl p-4"><p class="text-[10px] text-emerald-500 uppercase font-bold">Gaji Bersih</p><p class="text-lg font-black text-emerald-400">' + formatRupiah(row[10]) + '</p></div>' +
-        '</div>' +
-        '<p class="text-[10px] text-slate-600 mt-3 text-center">Dihitung oleh Admin pada ' + escapeHtml(row[11]) + '</p>';
+      box.innerHTML = buildSlipGajiHtml(row, APP.instansi) +
+        '<p class="text-[10px] text-slate-500 mt-3 text-center"><i class="fa-solid fa-circle-info mr-1"></i>Slip ini hanya untuk dilihat. Cetak/unduh resmi hanya dapat dilakukan oleh Admin.</p>';
     }).catch(function (err) {
       box.innerHTML = '<p class="text-rose-400 text-sm text-center py-4">' + escapeHtml(err.message || String(err)) + '</p>';
     });
@@ -1661,6 +1675,190 @@
         Swal.fire('Gagal', (res && res.message) || 'Terjadi kesalahan.', 'error');
       }
     }).catch(function (err) { Swal.close(); onServerError(err); });
+  }
+
+  // ===================== SLIP GAJI: TEMPLATE PROFESIONAL & CETAK (ADMIN ONLY) =====================
+  var NAMA_BULAN_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+
+  function formatPeriodeLabel(periode) {
+    var parts = String(periode || '').split('-');
+    if (parts.length < 2) return periode || '-';
+    var bulan = NAMA_BULAN_ID[parseInt(parts[1], 10) - 1] || parts[1];
+    return bulan + ' ' + parts[0];
+  }
+
+  // Konversi angka ke terbilang Bahasa Indonesia (standar untuk dokumen slip gaji resmi).
+  function angkaTerbilang(n) {
+    n = Math.floor(Math.abs(Number(n) || 0));
+    var satuan = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+    function rekursif(num) {
+      if (num < 12) return satuan[num];
+      if (num < 20) return rekursif(num - 10) + ' Belas';
+      if (num < 100) return rekursif(Math.floor(num / 10)) + ' Puluh' + (num % 10 !== 0 ? ' ' + rekursif(num % 10) : '');
+      if (num < 200) return 'Seratus' + (num % 100 !== 0 ? ' ' + rekursif(num % 100) : '');
+      if (num < 1000) return rekursif(Math.floor(num / 100)) + ' Ratus' + (num % 100 !== 0 ? ' ' + rekursif(num % 100) : '');
+      if (num < 2000) return 'Seribu' + (num % 1000 !== 0 ? ' ' + rekursif(num % 1000) : '');
+      if (num < 1000000) return rekursif(Math.floor(num / 1000)) + ' Ribu' + (num % 1000 !== 0 ? ' ' + rekursif(num % 1000) : '');
+      if (num < 1000000000) return rekursif(Math.floor(num / 1000000)) + ' Juta' + (num % 1000000 !== 0 ? ' ' + rekursif(num % 1000000) : '');
+      return rekursif(Math.floor(num / 1000000000)) + ' Miliar' + (num % 1000000000 !== 0 ? ' ' + rekursif(num % 1000000000) : '');
+    }
+    return n === 0 ? 'Nol' : rekursif(n);
+  }
+  function terbilangRupiah(n) { return angkaTerbilang(n) + ' Rupiah'; }
+
+  // Membangun tampilan slip gaji bergaya dokumen resmi (latar putih, siap cetak),
+  // dipakai baik oleh guru (lihat saja) maupun admin (di modal cetak/download).
+  // row: [periode, nip, nama, jabatan, hadir, terlambat, menitTerlambat, gajiPokok, tunjangan, potongan, gajiBersih, tglHitung]
+  function buildSlipGajiHtml(row, instansi) {
+    var totalPendapatan = (Number(row[7]) || 0) + (Number(row[8]) || 0);
+    return '' +
+      '<div style="background:#ffffff;color:#1e293b;border-radius:14px;padding:22px;font-family:Arial,Helvetica,sans-serif;">' +
+        '<div style="text-align:center;border-bottom:2px solid #1e293b;padding-bottom:12px;margin-bottom:14px;">' +
+          '<p style="margin:0;font-size:15px;font-weight:800;letter-spacing:0.3px;">' + escapeHtml(instansi || 'Sekolah') + '</p>' +
+          '<p style="margin:2px 0 0;font-size:11px;color:#475569;letter-spacing:1px;">SLIP GAJI GURU &amp; PEGAWAI</p>' +
+          '<p style="margin:2px 0 0;font-size:10px;color:#64748b;">Periode: ' + formatPeriodeLabel(row[0]) + '</p>' +
+        '</div>' +
+        '<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:14px;">' +
+          '<tr><td style="padding:3px 0;color:#64748b;width:100px;">Nama</td><td style="padding:3px 0;font-weight:700;">: ' + escapeHtml(row[2]) + '</td></tr>' +
+          '<tr><td style="padding:3px 0;color:#64748b;">NIP</td><td style="padding:3px 0;font-family:monospace;">: ' + escapeHtml(row[1]) + '</td></tr>' +
+          '<tr><td style="padding:3px 0;color:#64748b;">Jabatan</td><td style="padding:3px 0;">: ' + escapeHtml(row[3]) + '</td></tr>' +
+          '<tr><td style="padding:3px 0;color:#64748b;">Kehadiran</td><td style="padding:3px 0;">: ' + row[4] + ' hari hadir, ' + row[5] + ' hari terlambat (' + row[6] + ' menit)</td></tr>' +
+        '</table>' +
+        '<table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-bottom:10px;">' +
+          '<thead><tr style="background:#f1f5f9;">' +
+            '<th style="text-align:left;padding:6px 8px;border:1px solid #e2e8f0;">Komponen</th>' +
+            '<th style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">Jumlah</th>' +
+          '</tr></thead><tbody>' +
+            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;">Gaji Pokok</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">' + formatRupiah(row[7]) + '</td></tr>' +
+            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;">Tunjangan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">' + formatRupiah(row[8]) + '</td></tr>' +
+            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;font-weight:700;">Total Pendapatan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;font-weight:700;">' + formatRupiah(totalPendapatan) + '</td></tr>' +
+            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;color:#b91c1c;">Potongan Keterlambatan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;color:#b91c1c;">&minus; ' + formatRupiah(row[9]) + '</td></tr>' +
+            '<tr style="background:#ecfdf5;"><td style="padding:8px;border:1px solid #e2e8f0;font-weight:800;color:#047857;">GAJI BERSIH (Take Home Pay)</td><td style="text-align:right;padding:8px;border:1px solid #e2e8f0;font-weight:800;color:#047857;">' + formatRupiah(row[10]) + '</td></tr>' +
+          '</tbody></table>' +
+        '<p style="font-size:10px;font-style:italic;color:#475569;margin:0 0 16px;">Terbilang: ' + terbilangRupiah(row[10]) + '</p>' +
+        '<table style="width:100%;font-size:10.5px;margin-top:10px;"><tr>' +
+          '<td style="width:50%;text-align:center;vertical-align:top;">' +
+            '<p style="margin:0;color:#475569;">Mengetahui,<br>Kepala Sekolah</p>' +
+            '<div style="height:56px;"></div>' +
+            '<p style="margin:0;border-top:1px solid #94a3b8;display:inline-block;padding-top:3px;">( ......................................... )</p>' +
+          '</td>' +
+          '<td style="width:50%;text-align:center;vertical-align:top;">' +
+            '<p style="margin:0;color:#475569;">Diterima oleh,</p>' +
+            '<div style="height:56px;"></div>' +
+            '<p style="margin:0;border-top:1px solid #94a3b8;display:inline-block;padding-top:3px;font-weight:700;">' + escapeHtml(row[2]) + '</p>' +
+          '</td>' +
+        '</tr></table>' +
+        '<p style="text-align:center;font-size:9px;color:#94a3b8;margin:14px 0 0;">Dihitung oleh Admin pada ' + escapeHtml(row[11]) + '</p>' +
+      '</div>';
+  }
+
+  // Menghasilkan file PDF slip gaji satu halaman siap cetak (dipanggil hanya dari modal admin).
+  function exportSlipGajiPDF(row, instansi) {
+    var docPdf = new jspdf.jsPDF({ unit: 'mm', format: 'a4' });
+    var pageWidth = docPdf.internal.pageSize.getWidth();
+    var marginX = 18;
+    var y = 20;
+
+    docPdf.setFont('helvetica', 'bold'); docPdf.setFontSize(14);
+    docPdf.text(String(instansi || 'Sekolah'), pageWidth / 2, y, { align: 'center' });
+    y += 6;
+    docPdf.setFont('helvetica', 'normal'); docPdf.setFontSize(10.5);
+    docPdf.text('SLIP GAJI GURU & PEGAWAI', pageWidth / 2, y, { align: 'center' });
+    y += 5;
+    docPdf.setFontSize(9); docPdf.setTextColor(100);
+    docPdf.text('Periode: ' + formatPeriodeLabel(row[0]), pageWidth / 2, y, { align: 'center' });
+    docPdf.setTextColor(0);
+    y += 4;
+    docPdf.setLineWidth(0.6);
+    docPdf.line(marginX, y, pageWidth - marginX, y);
+    y += 8;
+
+    docPdf.setFontSize(10);
+    [['Nama', row[2]], ['NIP', row[1]], ['Jabatan', row[3]],
+     ['Kehadiran', row[4] + ' hari hadir, ' + row[5] + ' hari terlambat (' + row[6] + ' menit)']
+    ].forEach(function (r) {
+      docPdf.setFont('helvetica', 'normal'); docPdf.text(String(r[0]), marginX, y);
+      docPdf.text(':', marginX + 32, y);
+      docPdf.setFont('helvetica', 'bold'); docPdf.text(String(r[1]), marginX + 36, y);
+      y += 6;
+    });
+    y += 3;
+
+    var totalPendapatan = (Number(row[7]) || 0) + (Number(row[8]) || 0);
+    docPdf.autoTable({
+      startY: y,
+      margin: { left: marginX, right: marginX },
+      head: [['Komponen', 'Jumlah (Rp)']],
+      body: [
+        ['Gaji Pokok', formatRupiah(row[7])],
+        ['Tunjangan', formatRupiah(row[8])],
+        ['Total Pendapatan', formatRupiah(totalPendapatan)],
+        ['Potongan Keterlambatan', '- ' + formatRupiah(row[9])],
+        ['GAJI BERSIH (Take Home Pay)', formatRupiah(row[10])]
+      ],
+      styles: { fontSize: 9.5, cellPadding: 3 },
+      headStyles: { fillColor: [30, 41, 59] },
+      didParseCell: function (data) {
+        if (data.section === 'body' && data.row.index === 4) {
+          data.cell.styles.fontStyle = 'bold';
+          data.cell.styles.fillColor = [236, 253, 245];
+          data.cell.styles.textColor = [4, 120, 87];
+        }
+        if (data.section === 'body' && data.row.index === 2) {
+          data.cell.styles.fontStyle = 'bold';
+        }
+      }
+    });
+
+    y = docPdf.lastAutoTable.finalY + 8;
+    docPdf.setFont('helvetica', 'italic'); docPdf.setFontSize(9);
+    docPdf.text('Terbilang: ' + terbilangRupiah(row[10]), marginX, y);
+    y += 22;
+
+    var colWidth = (pageWidth - marginX * 2) / 2;
+    docPdf.setFont('helvetica', 'normal'); docPdf.setFontSize(9.5);
+    docPdf.text('Mengetahui,', marginX + colWidth / 2, y, { align: 'center' });
+    docPdf.text('Kepala Sekolah', marginX + colWidth / 2, y + 5, { align: 'center' });
+    docPdf.text('Diterima oleh,', marginX + colWidth + colWidth / 2, y, { align: 'center' });
+
+    y += 28;
+    docPdf.line(marginX + 10, y, marginX + colWidth - 10, y);
+    docPdf.line(marginX + colWidth + 10, y, marginX + colWidth * 2 - 10, y);
+    y += 5;
+    docPdf.setFont('helvetica', 'normal');
+    docPdf.text('( ......................... )', marginX + colWidth / 2, y, { align: 'center' });
+    docPdf.setFont('helvetica', 'bold');
+    docPdf.text(String(row[2]), marginX + colWidth + colWidth / 2, y, { align: 'center' });
+
+    y += 12;
+    docPdf.setFont('helvetica', 'normal'); docPdf.setFontSize(8); docPdf.setTextColor(120);
+    docPdf.text('Dihitung oleh Admin pada ' + String(row[11]), pageWidth / 2, y, { align: 'center' });
+
+    var fileName = 'SlipGaji_' + String(row[2]).replace(/\s+/g, '_') + '_' + row[0] + '.pdf';
+    docPdf.save(fileName);
+  }
+
+  // Modal pratinjau + cetak/download slip gaji individual. HANYA dipanggil dari tab
+  // "Perhitungan Gaji" milik Admin (tab tsb sudah terkunci untuk role Admin saja),
+  // sehingga guru tidak pernah memiliki akses ke tombol cetak/download ini.
+  var APP_SLIP_CURRENT = null;
+  function openSlipGajiModal(nip) {
+    if (!APP.payrollCache || !APP.payrollCache.data || !APP.payrollCache.data.length) {
+      Swal.fire('Belum Ada Data', 'Hitung gaji terlebih dahulu.', 'info'); return;
+    }
+    var row = APP.payrollCache.data.filter(function (r) { return String(r[1]) === String(nip); })[0];
+    if (!row) { Swal.fire('Tidak Ditemukan', 'Data gaji guru ini tidak ditemukan pada periode ini.', 'info'); return; }
+    APP_SLIP_CURRENT = row;
+    document.getElementById('slip-gaji-modal-content').innerHTML = buildSlipGajiHtml(row, APP.instansi);
+    document.getElementById('slip-gaji-modal').classList.remove('hidden');
+  }
+  function closeSlipGajiModal() {
+    document.getElementById('slip-gaji-modal').classList.add('hidden');
+    APP_SLIP_CURRENT = null;
+  }
+  function downloadCurrentSlipGajiPDF() {
+    if (!APP_SLIP_CURRENT) { Swal.fire('Belum Ada Data', 'Pilih slip gaji terlebih dahulu.', 'info'); return; }
+    exportSlipGajiPDF(APP_SLIP_CURRENT, APP.instansi);
   }
 
   // ===================== UTIL =====================
