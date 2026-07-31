@@ -79,12 +79,6 @@
       animation: scan 2.2s linear infinite; z-index: 20;
     }
     .tab-content.hidden { display: none; }
-    @media print {
-      body * { visibility: hidden; }
-      #slip-gaji-modal, #slip-gaji-modal * { visibility: visible; }
-      #slip-gaji-modal { position: absolute; inset: 0; background: #fff; padding: 0; }
-      #slip-gaji-modal .no-print { display: none !important; }
-    }
 
     /* ===== Header & branding mewah ===== */
     .app-header {
@@ -496,14 +490,14 @@
   <!-- ================== MODAL SLIP GAJI (CETAK/DOWNLOAD - ADMIN ONLY) ================== -->
   <div id="slip-gaji-modal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="glass-card-solid rounded-3xl w-full max-w-lg max-h-[92vh] overflow-y-auto p-5">
-      <div class="flex justify-between items-center mb-4 no-print">
+      <div class="flex justify-between items-center mb-4">
         <h3 class="text-lg font-bold text-white"><i class="fa-solid fa-file-invoice-dollar mr-2 text-amber-400"></i>Pratinjau Slip Gaji</h3>
         <button onclick="closeSlipGajiModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
       </div>
       <div id="slip-gaji-modal-content"></div>
-      <div class="flex gap-2 mt-5 no-print">
-        <button onclick="downloadCurrentSlipGajiPDF()" class="flex-1 bg-rose-700 hover:bg-rose-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> Download PDF</button>
-        <button onclick="window.print()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-print mr-1"></i> Cetak</button>
+      <div class="mt-5">
+        <button onclick="downloadCurrentSlipGajiPDF()" class="w-full bg-rose-700 hover:bg-rose-600 text-white px-4 py-3 rounded-xl text-xs font-bold transition"><i class="fa-solid fa-file-pdf mr-1"></i> Download / Cetak PDF</button>
+        <p class="text-[10px] text-slate-500 text-center mt-2">File PDF akan terunduh ke HP. Buka file-nya lalu pilih "Cetak" dari aplikasi pembaca PDF/printer Anda.</p>
       </div>
     </div>
   </div>
@@ -1712,40 +1706,40 @@
   function buildSlipGajiHtml(row, instansi) {
     var totalPendapatan = (Number(row[7]) || 0) + (Number(row[8]) || 0);
     return '' +
-      '<div style="background:#ffffff;color:#1e293b;border-radius:14px;padding:22px;font-family:Arial,Helvetica,sans-serif;">' +
-        '<div style="text-align:center;border-bottom:2px solid #1e293b;padding-bottom:12px;margin-bottom:14px;">' +
-          '<p style="margin:0;font-size:15px;font-weight:800;letter-spacing:0.3px;">' + escapeHtml(instansi || 'Sekolah') + '</p>' +
-          '<p style="margin:2px 0 0;font-size:11px;color:#475569;letter-spacing:1px;">SLIP GAJI GURU &amp; PEGAWAI</p>' +
-          '<p style="margin:2px 0 0;font-size:10px;color:#64748b;">Periode: ' + formatPeriodeLabel(row[0]) + '</p>' +
+      '<div style="background:#ffffff;color:#0f172a;border-radius:14px;padding:24px;font-family:Arial,Helvetica,sans-serif;text-align:left;">' +
+        '<div style="text-align:center;border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:16px;">' +
+          '<p style="margin:0;font-size:17px;font-weight:800;letter-spacing:0.3px;">' + escapeHtml(instansi || 'Sekolah') + '</p>' +
+          '<p style="margin:3px 0 0;font-size:12.5px;color:#334155;letter-spacing:1px;">SLIP GAJI GURU &amp; PEGAWAI</p>' +
+          '<p style="margin:3px 0 0;font-size:11.5px;color:#475569;">Periode: ' + formatPeriodeLabel(row[0]) + '</p>' +
         '</div>' +
-        '<table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:14px;">' +
-          '<tr><td style="padding:3px 0;color:#64748b;width:100px;">Nama</td><td style="padding:3px 0;font-weight:700;">: ' + escapeHtml(row[2]) + '</td></tr>' +
-          '<tr><td style="padding:3px 0;color:#64748b;">NIP</td><td style="padding:3px 0;font-family:monospace;">: ' + escapeHtml(row[1]) + '</td></tr>' +
-          '<tr><td style="padding:3px 0;color:#64748b;">Jabatan</td><td style="padding:3px 0;">: ' + escapeHtml(row[3]) + '</td></tr>' +
-          '<tr><td style="padding:3px 0;color:#64748b;">Kehadiran</td><td style="padding:3px 0;">: ' + row[4] + ' hari hadir, ' + row[5] + ' hari terlambat (' + row[6] + ' menit)</td></tr>' +
+        '<table style="width:100%;font-size:12.5px;border-collapse:collapse;margin-bottom:16px;">' +
+          '<tr><td style="text-align:left;padding:4px 0;color:#475569;width:105px;">Nama</td><td style="text-align:left;padding:4px 0;font-weight:700;">: ' + escapeHtml(row[2]) + '</td></tr>' +
+          '<tr><td style="text-align:left;padding:4px 0;color:#475569;">NIP</td><td style="text-align:left;padding:4px 0;font-family:monospace;">: ' + escapeHtml(row[1]) + '</td></tr>' +
+          '<tr><td style="text-align:left;padding:4px 0;color:#475569;">Jabatan</td><td style="text-align:left;padding:4px 0;">: ' + escapeHtml(row[3]) + '</td></tr>' +
+          '<tr><td style="text-align:left;padding:4px 0;color:#475569;">Kehadiran</td><td style="text-align:left;padding:4px 0;">: ' + row[4] + ' hari hadir, ' + row[5] + ' hari terlambat (' + row[6] + ' menit)</td></tr>' +
         '</table>' +
-        '<table style="width:100%;font-size:11.5px;border-collapse:collapse;margin-bottom:10px;">' +
+        '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:12px;">' +
           '<thead><tr style="background:#f1f5f9;">' +
-            '<th style="text-align:left;padding:6px 8px;border:1px solid #e2e8f0;">Komponen</th>' +
-            '<th style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">Jumlah</th>' +
+            '<th style="text-align:left;padding:7px 9px;border:1px solid #cbd5e1;">Komponen</th>' +
+            '<th style="text-align:right;padding:7px 9px;border:1px solid #cbd5e1;">Jumlah</th>' +
           '</tr></thead><tbody>' +
-            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;">Gaji Pokok</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">' + formatRupiah(row[7]) + '</td></tr>' +
-            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;">Tunjangan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;">' + formatRupiah(row[8]) + '</td></tr>' +
-            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;font-weight:700;">Total Pendapatan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;font-weight:700;">' + formatRupiah(totalPendapatan) + '</td></tr>' +
-            '<tr><td style="padding:6px 8px;border:1px solid #e2e8f0;color:#b91c1c;">Potongan Keterlambatan</td><td style="text-align:right;padding:6px 8px;border:1px solid #e2e8f0;color:#b91c1c;">&minus; ' + formatRupiah(row[9]) + '</td></tr>' +
-            '<tr style="background:#ecfdf5;"><td style="padding:8px;border:1px solid #e2e8f0;font-weight:800;color:#047857;">GAJI BERSIH (Take Home Pay)</td><td style="text-align:right;padding:8px;border:1px solid #e2e8f0;font-weight:800;color:#047857;">' + formatRupiah(row[10]) + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:7px 9px;border:1px solid #cbd5e1;">Gaji Pokok</td><td style="text-align:right;padding:7px 9px;border:1px solid #cbd5e1;">' + formatRupiah(row[7]) + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:7px 9px;border:1px solid #cbd5e1;">Tunjangan</td><td style="text-align:right;padding:7px 9px;border:1px solid #cbd5e1;">' + formatRupiah(row[8]) + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:7px 9px;border:1px solid #cbd5e1;font-weight:700;">Total Pendapatan</td><td style="text-align:right;padding:7px 9px;border:1px solid #cbd5e1;font-weight:700;">' + formatRupiah(totalPendapatan) + '</td></tr>' +
+            '<tr><td style="text-align:left;padding:7px 9px;border:1px solid #cbd5e1;color:#b91c1c;">Potongan Keterlambatan</td><td style="text-align:right;padding:7px 9px;border:1px solid #cbd5e1;color:#b91c1c;">&minus; ' + formatRupiah(row[9]) + '</td></tr>' +
+            '<tr style="background:#ecfdf5;"><td style="text-align:left;padding:9px;border:1px solid #cbd5e1;font-weight:800;color:#047857;">GAJI BERSIH (Take Home Pay)</td><td style="text-align:right;padding:9px;border:1px solid #cbd5e1;font-weight:800;color:#047857;">' + formatRupiah(row[10]) + '</td></tr>' +
           '</tbody></table>' +
-        '<p style="font-size:10px;font-style:italic;color:#475569;margin:0 0 16px;">Terbilang: ' + terbilangRupiah(row[10]) + '</p>' +
-        '<table style="width:100%;font-size:10.5px;margin-top:10px;"><tr>' +
+        '<p style="font-size:11.5px;font-style:italic;color:#334155;margin:0 0 18px;">Terbilang: ' + terbilangRupiah(row[10]) + '</p>' +
+        '<table style="width:100%;font-size:11.5px;margin-top:10px;"><tr>' +
           '<td style="width:50%;text-align:center;vertical-align:top;">' +
-            '<p style="margin:0;color:#475569;">Mengetahui,<br>Kepala Sekolah</p>' +
+            '<p style="margin:0;color:#334155;">Mengetahui,<br>Kepala Sekolah</p>' +
             '<div style="height:56px;"></div>' +
-            '<p style="margin:0;border-top:1px solid #94a3b8;display:inline-block;padding-top:3px;">( ......................................... )</p>' +
+            '<p style="margin:0;border-top:1px solid #64748b;display:inline-block;padding-top:3px;">( ......................................... )</p>' +
           '</td>' +
           '<td style="width:50%;text-align:center;vertical-align:top;">' +
-            '<p style="margin:0;color:#475569;">Diterima oleh,</p>' +
+            '<p style="margin:0;color:#334155;">Diterima oleh,</p>' +
             '<div style="height:56px;"></div>' +
-            '<p style="margin:0;border-top:1px solid #94a3b8;display:inline-block;padding-top:3px;font-weight:700;">' + escapeHtml(row[2]) + '</p>' +
+            '<p style="margin:0;border-top:1px solid #64748b;display:inline-block;padding-top:3px;font-weight:700;">' + escapeHtml(row[2]) + '</p>' +
           '</td>' +
         '</tr></table>' +
         '<p style="text-align:center;font-size:9px;color:#94a3b8;margin:14px 0 0;">Dihitung oleh Admin pada ' + escapeHtml(row[11]) + '</p>' +
